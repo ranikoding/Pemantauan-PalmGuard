@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Content Security Policy untuk production -->
-    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://thingspeak.com https://cdn.jsdelivr.net"> -->
     <title>PalmGuard - Monitoring System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
@@ -59,8 +57,9 @@
             padding: 10px;
         }
         
-        #activityChart {
-            height: 260px !important;
+        .chart-container {
+            height: 300px;
+            margin-bottom: 20px;
         }
         
         .thingspeak-container {
@@ -272,7 +271,7 @@
                 <div class="card mb-4">
                     <div class="card-header bg-success text-white">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Aktivitas Hama & Respons Sistem</h5>
+                            <h5 class="card-title mb-0">Frekuensi Getaran & Pengusiran</h5>
                             <div>
                                 <select class="form-select form-select-sm" id="chart-range" style="width: auto; display: inline-block;">
                                     <option value="1">Hari Ini</option>
@@ -285,41 +284,21 @@
                     <div class="card-body">
                         <div class="thingspeak-container">
                             <div class="thingspeak-chart">
-                                <div class="chart-title">Accelerometer (Field 1)</div>
+                                <div class="chart-title">Frekuensi Getaran (Hz)</div>
                                 <iframe 
                                     width="100%" 
                                     height="260" 
-                                    src="https://thingspeak.com/channels/3007423/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&title=Accelerometer&yaxis=Value"
-                                    onerror="this.parentNode.innerHTML='<div class=\'loading-placeholder\'>Gagal memuat grafik Accelerometer</div>'">
+                                    src="https://thingspeak.com/channels/3007423/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&title=Frekuensi+Getaran&yaxis=Hz"
+                                    onerror="this.parentNode.innerHTML='<div class=\'loading-placeholder\'>Gagal memuat grafik Frekuensi Getaran</div>'">
                                 </iframe>
                             </div>
                             <div class="thingspeak-chart">
-                                <div class="chart-title">Microphone (Field 3)</div>
+                                <div class="chart-title">Frekuensi Pengusiran (Hz)</div>
                                 <iframe 
                                     width="100%" 
                                     height="260" 
-                                    src="https://thingspeak.com/channels/3007423/charts/3?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&title=Microphone&yaxis=dB"
-                                    onerror="this.parentNode.innerHTML='<div class=\'loading-placeholder\'>Gagal memuat grafik Microphone</div>'">
-                                </iframe>
-                            </div>
-                        </div>
-                        <div class="thingspeak-container">
-                            <div class="thingspeak-chart">
-                                <div class="chart-title">LRA Status (Field 2)</div>
-                                <iframe 
-                                    width="100%" 
-                                    height="260" 
-                                    src="https://thingspeak.com/channels/3007423/charts/2?bgcolor=%23ffffff&color=%23ff9900&dynamic=true&results=60&title=LRA+Status&type=line"
-                                    onerror="this.parentNode.innerHTML='<div class=\'loading-placeholder\'>Gagal memuat grafik LRA Status</div>'">
-                                </iframe>
-                            </div>
-                            <div class="thingspeak-chart">
-                                <div class="chart-title">LRA Frequency (Field 4)</div>
-                                <iframe 
-                                    width="100%" 
-                                    height="260" 
-                                    src="https://thingspeak.com/channels/3007423/charts/4?bgcolor=%23ffffff&color=%236600cc&dynamic=true&results=60&title=LRA+Frequency&yaxis=Hz"
-                                    onerror="this.parentNode.innerHTML='<div class=\'loading-placeholder\'>Gagal memuat grafik LRA Frequency</div>'">
+                                    src="https://thingspeak.com/channels/3007423/charts/3?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&title=Frekuensi+Pengusiran&yaxis=Hz"
+                                    onerror="this.parentNode.innerHTML='<div class=\'loading-placeholder\'>Gagal memuat grafik Frekuensi Pengusiran</div>'">
                                 </iframe>
                             </div>
                         </div>
@@ -383,15 +362,14 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Waktu</th>
-                                        <th>Accelerometer</th>
-                                        <th>Microphone</th>
-                                        <th>LRA Status</th>
-                                        <th>LRA Frequency</th>
+                                        <th>Frekuensi Getaran (Hz)</th>
+                                        <th>Frekuensi Pengusiran (Hz)</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">Memuat data...</td>
+                                        <td colspan="4" class="text-center text-muted">Memuat data...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -413,9 +391,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script>
         // Konfigurasi Thingspeak
-        const CHANNEL_ID = '3007423'; // Channel ID Anda
+        const CHANNEL_ID = '3007423'; // Ganti dengan Channel ID Anda
         const READ_API_KEY = ''; // Kosongkan untuk channel publik
         const UPDATE_INTERVAL = 15000; // 15 detik
+
+        // Field yang digunakan
+        const FIELD_VIBRATION = 1; // Field untuk frekuensi getaran
+        const FIELD_REPULSION = 3; // Field untuk frekuensi pengusiran
+        const FIELD_STATUS = 2;    // Field untuk status sistem
 
         // Fungsi untuk memformat waktu
         function formatTime(date) {
@@ -445,20 +428,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             
-            // Tambahkan alert ke bagian atas konten
             const container = document.querySelector('.container-fluid');
             container.insertBefore(errorDiv, container.firstChild);
             
-            // Hapus otomatis setelah 5 detik
             setTimeout(() => {
                 errorDiv.remove();
             }, 5000);
         }
 
-        // Fungsi untuk mengupdate data dari Thingspeak
-        async function updateData() {
+        // Fungsi untuk mengambil data dari Thingspeak
+        async function fetchThingSpeakData(field, results = 10) {
             try {
-                let apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?results=10`;
+                let apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/${field}.json?results=${results}`;
                 if (READ_API_KEY) {
                     apiUrl += `&api_key=${READ_API_KEY}`;
                 }
@@ -470,43 +451,61 @@
                 }
                 
                 const data = await response.json();
-                
-                if (!data.feeds || data.feeds.length === 0) {
-                    showError('Tidak ada data yang diterima dari ThingSpeak');
-                    return;
-                }
-                
-                const lastData = data.feeds[data.feeds.length - 1];
+                return data.feeds || [];
+            } catch (error) {
+                showError(`Gagal mengambil data field ${field}: ${error.message}`);
+                return [];
+            }
+        }
+
+        // Fungsi untuk mengupdate data utama
+        async function updateData() {
+            try {
+                // Ambil data terbaru untuk semua field
+                const [vibrationData, repulsionData, statusData] = await Promise.all([
+                    fetchThingSpeakData(FIELD_VIBRATION, 1),
+                    fetchThingSpeakData(FIELD_REPULSION, 1),
+                    fetchThingSpeakData(FIELD_STATUS, 10)
+                ]);
+
                 const now = new Date();
                 
-                // Update data terbaru dengan fallback jika null/undefined
-                document.getElementById('last-vibration').textContent = `${lastData.field1 || '0'}`;
-                document.getElementById('last-repulsion').textContent = `${lastData.field4 || '0'} Hz`;
-                document.getElementById('mic-value').textContent = `${lastData.field3 || '0'}`;
-                document.getElementById('lra-freq').textContent = `${lastData.field4 || '0'} Hz`;
-                
-                // Update progress bar
-                const vibrationValue = parseFloat(lastData.field1) || 0;
-                const vibrationIntensity = Math.min(100, (vibrationValue / 250) * 100);
-                document.getElementById('vibration-progress').style.width = `${vibrationIntensity}%`;
-                
-                // Update label intensitas
-                const intensityLabel = vibrationIntensity > 70 ? 'Tinggi' : vibrationIntensity > 30 ? 'Sedang' : 'Rendah';
-                document.getElementById('vibration-intensity').textContent = intensityLabel;
-                
+                // Update data frekuensi getaran
+                if (vibrationData.length > 0) {
+                    const lastVibration = vibrationData[0];
+                    const vibrationValue = parseFloat(lastVibration.field1) || 0;
+                    
+                    document.getElementById('last-vibration').textContent = `${vibrationValue}`;
+                    
+                    // Update progress bar
+                    const vibrationIntensity = Math.min(100, (vibrationValue / 250) * 100);
+                    document.getElementById('vibration-progress').style.width = `${vibrationIntensity}%`;
+                    
+                    // Update label intensitas
+                    const intensityLabel = vibrationIntensity > 70 ? 'Tinggi' : vibrationIntensity > 30 ? 'Sedang' : 'Rendah';
+                    document.getElementById('vibration-intensity').textContent = intensityLabel;
+                }
+
+                // Update data frekuensi pengusiran
+                if (repulsionData.length > 0) {
+                    const lastRepulsion = repulsionData[0];
+                    document.getElementById('last-repulsion').textContent = `${lastRepulsion.field3 || '0'} Hz`;
+                    document.getElementById('lra-freq').textContent = `${lastRepulsion.field3 || '0'} Hz`;
+                }
+
                 // Update waktu terakhir
                 document.getElementById('last-detection').textContent = `Getaran terdeteksi pada ${formatTime(now)}`;
                 document.getElementById('last-activation').textContent = `Terakhir diaktifkan: ${formatTime(now)} (Durasi: 10 detik)`;
                 document.getElementById('accel-update').textContent = 'Baru saja';
                 
                 // Update log aktivitas
-                updateActivityLog(data.feeds);
+                updateActivityLog(statusData);
                 
                 // Update statistik acak (simulasi)
                 updateRandomStats();
                 
             } catch (error) {
-                showError(`Gagal mengambil data: ${error.message}`);
+                showError(`Gagal memperbarui data: ${error.message}`);
             }
         }
 
@@ -514,11 +513,10 @@
         function updateActivityLog(feeds) {
             const tableBody = document.querySelector('#activity-log tbody');
             
-            // Tambahkan placeholder jika tidak ada data
             if (!feeds || feeds.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center text-muted">Tidak ada data yang tersedia</td>
+                        <td colspan="4" class="text-center text-muted">Tidak ada data yang tersedia</td>
                     </tr>
                 `;
                 return;
@@ -536,9 +534,8 @@
                 row.innerHTML = `
                     <td>${formatTime(time)}<br><small>${formatDate(time)}</small></td>
                     <td>${feed.field1 || '-'}</td>
-                    <td>${feed.field3 || '-'} dB</td>
+                    <td>${feed.field3 || '-'}</td>
                     <td>${feed.field2 === '1' ? 'Aktif' : 'Nonaktif'}</td>
-                    <td>${feed.field4 || '-'} Hz</td>
                 `;
                 
                 tableBody.appendChild(row);
@@ -547,7 +544,6 @@
 
         // Fungsi untuk update statistik acak (simulasi)
         function updateRandomStats() {
-            // Simulasi perubahan statistik
             const detectionToday = Math.floor(Math.random() * 5) + 5;
             const activationToday = Math.max(detectionToday - Math.floor(Math.random() * 3), 0);
             const effectiveness = Math.floor(Math.random() * 15) + 80;
@@ -556,11 +552,9 @@
             document.getElementById('activation-today').textContent = activationToday;
             document.getElementById('effectiveness').textContent = effectiveness > 100 ? 100 : effectiveness;
             
-            // Update level baterai secara acak
             const batteryLevel = Math.floor(Math.random() * 20) + 40;
             document.getElementById('battery-level').textContent = batteryLevel > 100 ? 100 : batteryLevel;
             
-            // Hitung waktu tersisa baterai
             const hours = Math.floor(batteryLevel / 12.5);
             const minutes = Math.floor((batteryLevel % 12.5) * 4.8);
             document.getElementById('battery-time').textContent = `${hours} jam ${minutes} menit`;
@@ -593,17 +587,6 @@
             // Event listener untuk perubahan range chart
             document.getElementById('chart-range').addEventListener('change', function() {
                 updateChart(this.value);
-            });
-
-            // Tambahkan penanganan error untuk iframe ThingSpeak
-            const iframes = document.querySelectorAll('.thingspeak-container iframe');
-            iframes.forEach(iframe => {
-                iframe.addEventListener('error', function() {
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'loading-placeholder';
-                    placeholder.textContent = 'Gagal memuat grafik: ' + this.parentNode.querySelector('.chart-title').textContent;
-                    this.parentNode.replaceChild(placeholder, this);
-                });
             });
         });
     </script>
