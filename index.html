@@ -42,6 +42,11 @@
             border-left: 5px solid #dc3545;
         }
         
+        .status-inactive {
+            background-color: #e9ecef;
+            border-left: 5px solid #6c757d;
+        }
+        
         .experiment-info {
             background-color: #f8f9fa;
             border-radius: 10px;
@@ -154,10 +159,7 @@
                 <img src="logo.png" alt="PalmGuard Logo" height="30" class="d-inline-block align-top me-2">
                 PalmGuard
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link active" href="#">Dashboard</a>
@@ -204,40 +206,40 @@
                         <h5 class="card-title mb-0">Status Perangkat</h5>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3 p-3 rounded status-active">
+                        <div class="mb-3 p-3 rounded status-inactive" id="accel-status">
                             <div class="d-flex justify-content-between">
                                 <strong>Sensor Accelerometer MEMS</strong>
-                                <span class="badge bg-success">Aktif</span>
+                                <span class="badge bg-secondary" id="accel-badge">Nonaktif</span>
                             </div>
-                            <small class="text-muted">Terakhir diperbarui: <span id="accel-update">2 menit lalu</span></small>
+                            <small class="text-muted">Terakhir diperbarui: <span id="accel-update">-</span></small>
                         </div>
-                        <div class="mb-3 p-3 rounded status-active">
+                        <div class="mb-3 p-3 rounded status-inactive" id="mic-status">
                             <div class="d-flex justify-content-between">
                                 <strong>Sensor Mikrofon</strong>
-                                <span class="badge bg-success">Aktif</span>
+                                <span class="badge bg-secondary" id="mic-badge">Nonaktif</span>
                             </div>
-                            <small class="text-muted">Sensitivitas: <span id="mic-value">65</span>dB</small>
+                            <small class="text-muted">Sensitivitas: <span id="mic-value">-</span>dB</small>
                         </div>
-                        <div class="mb-3 p-3 rounded status-active">
+                        <div class="mb-3 p-3 rounded status-inactive" id="lra-status">
                             <div class="d-flex justify-content-between">
                                 <strong>Aktuator LRA</strong>
-                                <span class="badge bg-success">Aktif</span>
+                                <span class="badge bg-secondary" id="lra-badge">Nonaktif</span>
                             </div>
-                            <small class="text-muted">Frekuensi: <span id="lra-freq">175-235</span> Hz</small>
+                            <small class="text-muted">Frekuensi: <span id="lra-freq">-</span> Hz</small>
                         </div>
-                        <div class="mb-3 p-3 rounded status-warning">
+                        <div class="mb-3 p-3 rounded status-inactive" id="solar-status">
                             <div class="d-flex justify-content-between">
                                 <strong>Panel Surya</strong>
-                                <span class="badge bg-warning text-dark"><span id="battery-level">60</span>%</span>
+                                <span class="badge bg-secondary" id="solar-badge"><span id="battery-level">0</span>%</span>
                             </div>
-                            <small class="text-muted">Daya tersisa: <span id="battery-time">8 jam 15 menit</span></small>
+                            <small class="text-muted">Daya tersisa: <span id="battery-time">-</span></small>
                         </div>
-                        <div class="p-3 rounded status-active">
+                        <div class="p-3 rounded status-inactive" id="iot-status">
                             <div class="d-flex justify-content-between">
                                 <strong>Koneksi IoT</strong>
-                                <span class="badge bg-success">Stabil</span>
+                                <span class="badge bg-secondary" id="iot-badge">Tidak Terhubung</span>
                             </div>
-                            <small class="text-muted">Sinyal: Kuat (ESP32)</small>
+                            <small class="text-muted">Sinyal: <span id="signal-strength">-</span></small>
                         </div>
                     </div>
                 </div>
@@ -249,19 +251,19 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span>Deteksi Hama Hari Ini</span>
-                            <span class="badge bg-primary"><span id="detection-today">8</span></span>
+                            <span class="badge bg-primary"><span id="detection-today">0</span></span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span>Aktivasi Pengusir</span>
-                            <span class="badge bg-danger"><span id="activation-today">6</span></span>
+                            <span class="badge bg-danger"><span id="activation-today">0</span></span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span>Frekuensi Rata-rata</span>
-                            <span class="badge bg-info"><span id="avg-freq">182</span> Hz</span>
+                            <span class="badge bg-info"><span id="avg-freq">0</span> Hz</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span>Efektivitas Pengusiran</span>
-                            <span class="badge bg-success"><span id="effectiveness">83</span>%</span>
+                            <span class="badge bg-success"><span id="effectiveness">0</span>%</span>
                         </div>
                     </div>
                 </div>
@@ -307,16 +309,16 @@
                             </div>
                             <div class="card-body">
                                 <div class="text-center mb-3">
-                                    <div class="display-4" id="last-vibration">175 Hz</div>
+                                    <div class="display-4" id="last-vibration">0 Hz</div>
                                     <small class="text-muted">Frekuensi Getaran Terakhir</small>
                                 </div>
                                 <div class="progress mb-2">
-                                    <div class="progress-bar bg-warning" id="vibration-progress" role="progressbar" style="width: 65%"></div>
+                                    <div class="progress-bar bg-warning" id="vibration-progress" role="progressbar" style="width: 0%"></div>
                                 </div>
-                                <small class="text-muted">Intensitas: <span id="vibration-intensity">Sedang</span></small>
+                                <small class="text-muted">Intensitas: <span id="vibration-intensity">-</span></small>
                                 <hr>
                                 <div class="alert alert-info">
-                                    <small id="last-detection">Getaran terdeteksi pada 15:32:45 WIB</small>
+                                    <small id="last-detection">Belum ada data terdeteksi</small>
                                 </div>
                             </div>
                         </div>
@@ -328,18 +330,18 @@
                             </div>
                             <div class="card-body">
                                 <div class="text-center mb-3">
-                                    <div class="display-4" id="last-repulsion">235 Hz</div>
+                                    <div class="display-4" id="last-repulsion">0 Hz</div>
                                     <small class="text-muted">Frekuensi Pengusiran Terakhir</small>
                                 </div>
                                 <div class="p-3 rounded auto-mode mb-3">
                                     <div class="d-flex justify-content-between">
                                         <strong>Mode Operasi</strong>
-                                        <span class="badge bg-primary" id="system-mode">Otomatis</span>
+                                        <span class="badge bg-secondary" id="system-mode">Nonaktif</span>
                                     </div>
-                                    <small class="text-muted">Sistem berjalan secara otomatis</small>
+                                    <small class="text-muted">Sistem belum terhubung</small>
                                 </div>
-                                <div class="alert alert-success">
-                                    <small id="last-activation">Terakhir diaktifkan: 15:32:45 WIB (Durasi: 10 detik)</small>
+                                <div class="alert alert-secondary">
+                                    <small id="last-activation">Belum pernah diaktifkan</small>
                                 </div>
                             </div>
                         </div>
@@ -385,21 +387,32 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script>
         // Konfigurasi Thingspeak
-        const CHANNEL_ID = '3007423'; // Ganti dengan Channel ID Anda
-        const READ_API_KEY = ''; // Kosongkan untuk channel publik
-        const UPDATE_INTERVAL = 15000; // 15 detik
+        const CHANNEL_ID = '3007423';
+        const READ_API_KEY = '';
+        const UPDATE_INTERVAL = 15000;
 
-        // Update konfigurasi field sesuai screenshot
-const FIELD_VIBRATION = 1;     // Getaran terakhir (Hz)
-const FIELD_INTENSITY = 1;     // Intensitas getaran (mungkin sama dengan field 1)
-const FIELD_REPULSION = 3;     // Frekuensi pengusirz
-const FIELD_DETECTION = 4;     // Deteksi hama hari i
-const FIELD_ACTIVATION = 5;    // Aktivasi pengusir
-const FIELD_EFFECTIVENESS = 6; // Efektivitas pengusir
-const FIELD_SOLAR = 7;         // Status panel surya z
+        // Field yang digunakan
+        const FIELD_VIBRATION = 1;
+        const FIELD_REPULSION = 3;
+        const FIELD_STATUS = 2;
+        const FIELD_DETECTION = 4;
+        const FIELD_ACTIVATION = 5;
+        const FIELD_BATTERY = 6;
+        const FIELD_SIGNAL = 7;
+
+        // Status awal perangkat
+        let deviceStatus = {
+            connected: false,
+            lastUpdate: null,
+            accelActive: false,
+            micActive: false,
+            lraActive: false,
+            solarActive: false
+        };
 
         // Fungsi untuk memformat waktu
         function formatTime(date) {
+            if (!date) return '-';
             return date.toLocaleTimeString('id-ID', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -409,6 +422,7 @@ const FIELD_SOLAR = 7;         // Status panel surya z
 
         // Fungsi untuk memformat tanggal
         function formatDate(date) {
+            if (!date) return '-';
             return date.toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: '2-digit',
@@ -477,18 +491,116 @@ const FIELD_SOLAR = 7;         // Status panel surya z
             }
         }
 
+        // Fungsi untuk mengupdate status perangkat
+        function updateDeviceStatus(data) {
+            const now = new Date();
+            const lastUpdate = data ? new Date(data.created_at) : null;
+            
+            // Cek koneksi (jika data ada dan tidak lebih dari 5 menit yang lalu)
+            const isConnected = data && (now - lastUpdate) < (5 * 60 * 1000);
+            
+            if (isConnected) {
+                // Update status koneksi IoT
+                document.getElementById('iot-status').className = 'p-3 rounded status-active';
+                document.getElementById('iot-badge').className = 'badge bg-success';
+                document.getElementById('iot-badge').textContent = 'Terhubung';
+                document.getElementById('signal-strength').textContent = data.field7 ? `${data.field7}%` : 'Kuat';
+                
+                // Update status perangkat lainnya
+                const hasVibration = data.field1 && parseFloat(data.field1) > 0;
+                const hasRepulsion = data.field3 && parseFloat(data.field3) > 0;
+                const hasBattery = data.field6 && parseFloat(data.field6) > 0;
+                
+                // Accelerometer
+                document.getElementById('accel-status').className = hasVibration ? 
+                    'mb-3 p-3 rounded status-active' : 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('accel-badge').className = hasVibration ? 
+                    'badge bg-success' : 'badge bg-secondary';
+                document.getElementById('accel-badge').textContent = hasVibration ? 'Aktif' : 'Nonaktif';
+                
+                // Mikrofon
+                document.getElementById('mic-status').className = hasVibration ? 
+                    'mb-3 p-3 rounded status-active' : 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('mic-badge').className = hasVibration ? 
+                    'badge bg-success' : 'badge bg-secondary';
+                document.getElementById('mic-badge').textContent = hasVibration ? 'Aktif' : 'Nonaktif';
+                document.getElementById('mic-value').textContent = hasVibration ? '65' : '-';
+                
+                // LRA
+                document.getElementById('lra-status').className = hasRepulsion ? 
+                    'mb-3 p-3 rounded status-active' : 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('lra-badge').className = hasRepulsion ? 
+                    'badge bg-success' : 'badge bg-secondary';
+                document.getElementById('lra-badge').textContent = hasRepulsion ? 'Aktif' : 'Nonaktif';
+                
+                // Panel Surya
+                document.getElementById('solar-status').className = hasBattery ? 
+                    'mb-3 p-3 rounded status-warning' : 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('solar-badge').className = hasBattery ? 
+                    'badge bg-warning text-dark' : 'badge bg-secondary';
+                
+                // Mode sistem
+                document.getElementById('system-mode').className = hasRepulsion ? 
+                    'badge bg-primary' : 'badge bg-secondary';
+                document.getElementById('system-mode').textContent = hasRepulsion ? 'Otomatis' : 'Nonaktif';
+                
+                deviceStatus.connected = true;
+                deviceStatus.lastUpdate = lastUpdate;
+                deviceStatus.accelActive = hasVibration;
+                deviceStatus.micActive = hasVibration;
+                deviceStatus.lraActive = hasRepulsion;
+                deviceStatus.solarActive = hasBattery;
+            } else {
+                // Reset semua status ke nonaktif
+                document.getElementById('iot-status').className = 'p-3 rounded status-inactive';
+                document.getElementById('iot-badge').className = 'badge bg-secondary';
+                document.getElementById('iot-badge').textContent = 'Tidak Terhubung';
+                document.getElementById('signal-strength').textContent = '-';
+                
+                document.getElementById('accel-status').className = 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('accel-badge').className = 'badge bg-secondary';
+                document.getElementById('accel-badge').textContent = 'Nonaktif';
+                
+                document.getElementById('mic-status').className = 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('mic-badge').className = 'badge bg-secondary';
+                document.getElementById('mic-badge').textContent = 'Nonaktif';
+                document.getElementById('mic-value').textContent = '-';
+                
+                document.getElementById('lra-status').className = 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('lra-badge').className = 'badge bg-secondary';
+                document.getElementById('lra-badge').textContent = 'Nonaktif';
+                
+                document.getElementById('solar-status').className = 'mb-3 p-3 rounded status-inactive';
+                document.getElementById('solar-badge').className = 'badge bg-secondary';
+                
+                document.getElementById('system-mode').className = 'badge bg-secondary';
+                document.getElementById('system-mode').textContent = 'Nonaktif';
+                
+                deviceStatus.connected = false;
+                deviceStatus.lastUpdate = null;
+                deviceStatus.accelActive = false;
+                deviceStatus.micActive = false;
+                deviceStatus.lraActive = false;
+                deviceStatus.solarActive = false;
+            }
+        }
+
         // Fungsi untuk mengupdate data utama
         async function updateData() {
             try {
                 // Ambil data terakhir dari semua field
                 const lastData = await fetchLastData();
+                
+                // Update status perangkat
+                updateDeviceStatus(lastData);
+                
                 if (!lastData) return;
                 
                 const now = new Date();
                 
                 // Update data frekuensi getaran
                 const vibrationValue = parseFloat(lastData.field1) || 0;
-                document.getElementById('last-vibration').textContent = `${vibrationValue}`;
+                document.getElementById('last-vibration').textContent = `${vibrationValue} Hz`;
                 
                 // Update progress bar
                 const vibrationIntensity = Math.min(100, (vibrationValue / 250) * 100);
@@ -503,23 +615,28 @@ const FIELD_SOLAR = 7;         // Status panel surya z
                 document.getElementById('lra-freq').textContent = `${lastData.field3 || '0'} Hz`;
 
                 // Update status panel surya
-                document.getElementById('battery-level').textContent = `${lastData.field6 || '0'}`;
+                const batteryLevel = parseFloat(lastData.field6) || 0;
+                document.getElementById('battery-level').textContent = `${batteryLevel}`;
                 
                 // Hitung waktu tersisa baterai
-                const batteryLevel = parseFloat(lastData.field6) || 0;
                 const hours = Math.floor(batteryLevel / 12.5);
                 const minutes = Math.floor((batteryLevel % 12.5) * 4.8);
-                document.getElementById('battery-time').textContent = `${hours} jam ${minutes} menit`;
+                document.getElementById('battery-time').textContent = batteryLevel > 0 ? 
+                    `${hours} jam ${minutes} menit` : '-';
 
                 // Update statistik
                 document.getElementById('detection-today').textContent = lastData.field4 || '0';
                 document.getElementById('activation-today').textContent = lastData.field5 || '0';
+                document.getElementById('effectiveness').textContent = lastData.field6 || '0';
                 
                 // Update waktu terakhir
                 const lastUpdate = new Date(lastData.created_at);
-                document.getElementById('last-detection').textContent = `Getaran terdeteksi pada ${formatTime(lastUpdate)}`;
-                document.getElementById('last-activation').textContent = `Terakhir diaktifkan: ${formatTime(lastUpdate)} (Durasi: 10 detik)`;
-                document.getElementById('accel-update').textContent = 'Baru saja';
+                document.getElementById('last-detection').textContent = vibrationValue > 0 ? 
+                    `Getaran terdeteksi pada ${formatTime(lastUpdate)}` : 'Belum ada getaran terdeteksi';
+                document.getElementById('last-activation').textContent = lastData.field3 > 0 ? 
+                    `Terakhir diaktifkan: ${formatTime(lastUpdate)} (Durasi: 10 detik)` : 'Belum pernah diaktifkan';
+                document.getElementById('accel-update').textContent = lastUpdate ? 
+                    'Baru saja' : '-';
                 
                 // Update log aktivitas
                 const feeds = await fetchThingSpeakData(FIELD_STATUS, 10);
@@ -584,9 +701,6 @@ const FIELD_SOLAR = 7;         // Status panel surya z
             // Update data pertama kali
             updateData();
             
-            if (lastData.field6) {
-                document.getElementById('effectiveness').textContent = lastData.field6;
-            }
             // Set interval untuk update data
             const updateInterval = setInterval(updateData, UPDATE_INTERVAL);
             
