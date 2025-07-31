@@ -558,6 +558,12 @@
                     'mb-3 p-3 rounded status-warning' : 'mb-3 p-3 rounded status-inactive';
                 document.getElementById('solar-badge').className = hasBattery ? 
                     'badge bg-warning text-dark' : 'badge bg-secondary';
+
+
+
+
+
+
                 
                 // Mode sistem
                 document.getElementById('system-mode').className = hasRepulsion ? 
@@ -635,7 +641,7 @@
                 document.getElementById('lra-freq').textContent = `${lastData.field3 || '0'} Hz`;
 
                 // Update status panel surya
-                const batteryLevel = parseFloat(lastData.field6) || 0;
+                const batteryLevel = parseFloat(lastData.field7) || 0;
                 document.getElementById('battery-level').textContent = `${batteryLevel}`;
                 
                 // Hitung waktu tersisa baterai
