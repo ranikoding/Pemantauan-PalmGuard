@@ -141,7 +141,7 @@
                     <div class="card-body">
                         <div class="mb-3 p-3 rounded status-inactive" id="accel-status">
                             <div class="d-flex justify-content-between">
-                                <strong>Sensor Accelerometer MEMS</strong>
+                                <strong>Sensor Accelerometer MEMS (deteksi getaran) </strong>
                                 <span class="badge bg-secondary" id="accel-badge">Nonaktif</span>
                             </div>
                             <small class="text-muted">Terakhir diperbarui: <span id="accel-update">-</span></small>
@@ -155,18 +155,10 @@
                         </div>
                         <div class="mb-3 p-3 rounded status-inactive" id="lra-status">
                             <div class="d-flex justify-content-between">
-                                <strong>Aktuator LRA</strong>
+                                <strong>Aktuator LRA (pengusir) </strong>
                                 <span class="badge bg-secondary" id="lra-badge">Nonaktif</span>
                             </div>
                             <small class="text-muted">Frekuensi: <span id="lra-freq">-</span> Hz</small>
-                        </div>
-                        <div class="mb-3 p-3 rounded status-inactive" id="solar-status">
-                            <div class="d-flex justify-content-between">
-                                <strong>Status Daya</strong>
-                                <span class="badge bg-secondary" id="solar-badge">-</span>
-                            </div>
-                            <small class="text-muted">Sinyal WiFi: <span id="signal-strength">-</span></small>
-                        </div>
                         <div class="p-3 rounded status-inactive" id="iot-status">
                             <div class="d-flex justify-content-between">
                                 <strong>Koneksi IoT</strong>
@@ -212,20 +204,20 @@
                                 <input type="date" id="date-selector" class="form-control form-control-sm">
                             </div>
                         </div>
-                        <div class="real-time-indicator">
+                        <div class="real-time-indicator" id="real-time-indicator">
                             <span class="blink">●</span> Data Real-time
                         </div>
                     </div>
                     <div class="card-body">
                         <div class="thingspeak-container">
                             <div class="thingspeak-chart position-relative">
-                                <div class="chart-title">Frekuensi Alami vs Pengusiran (Hz)</div>
+                                <div class="chart-title" id="chart-title-1">Frekuensi Getaran Hama vs Pengusiran (Hz)</div>
                                 <iframe width="100%" height="260" style="border: 1px solid #ccc;"
                                     src="https://thingspeak.com/channels/3007423/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&title=Frekuensi+Getaran&yaxis=Hz&days=1&average=10">
                                 </iframe>
                             </div>
                             <div class="thingspeak-chart position-relative">
-                                <div class="chart-title">Probabilitas Deteksi Hama (%)</div>
+                                <div class="chart-title" id="chart-title-2">Probabilitas Deteksi Hama (%)</div>
                                 <iframe width="100%" height="260" style="border: 1px solid #ccc;"
                                     src="https://thingspeak.com/channels/3007423/charts/3?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&type=line&title=Probabilitas+Hama&yaxis=%25&days=1">
                                 </iframe>
@@ -243,7 +235,7 @@
                             <div class="card-body">
                                 <div class="text-center mb-3">
                                     <div class="display-4" id="last-vibration">0 Hz</div>
-                                    <small class="text-muted">Frekuensi Alami Terakhir</small>
+                                    <small class="text-muted">Frekuensi Getaran Hama Terakhir</small>
                                 </div>
                                 <div class="progress mb-2">
                                     <div class="progress-bar bg-warning" id="vibration-progress" role="progressbar" style="width: 0%"></div>
@@ -265,10 +257,6 @@
                                 <div class="text-center mb-3">
                                     <div class="display-4" id="last-repulsion">0 Hz</div>
                                     <small class="text-muted">Frekuensi Pengusiran Terakhir</small>
-                                </div>
-                                <div class="text-center mb-2">
-                                    <div class="display-6" id="frequency-diff">+0 Hz</div>
-                                    <small class="text-muted">Perbedaan Frekuensi</small>
                                 </div>
                                 <div class="p-3 rounded auto-mode mb-3">
                                     <div class="d-flex justify-content-between">
@@ -295,7 +283,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Waktu</th>
-                                        <th>Frekuensi Alami (Hz)</th>
+                                        <th>Frekuensi Getaran Hama (Hz)</th>
                                         <th>Frekuensi Pengusiran (Hz)</th>
                                         <th>Probabilitas Hama</th>
                                     </tr>
@@ -394,9 +382,17 @@
         }
 
         // Fungsi untuk mengambil data dari Thingspeak
-        async function fetchThingSpeakData(field, results = 10) {
+        async function fetchThingSpeakData(field, results = 10, date = null) {
             try {
                 let apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/${field}.json?results=${results}`;
+                
+                if (date) {
+                    const nextDay = new Date(date);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    
+                    apiUrl += `&start=${formatDateToInput(date)}&end=${formatDateToInput(nextDay)}`;
+                }
+                
                 if (READ_API_KEY) {
                     apiUrl += `&api_key=${READ_API_KEY}`;
                 }
@@ -416,11 +412,19 @@
         }
 
         // Fungsi untuk mengambil data terakhir dari semua field
-        async function fetchLastData() {
+        async function fetchLastData(date = null) {
             try {
                 let apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json`;
+                
+                if (date) {
+                    const nextDay = new Date(date);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    
+                    apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?start=${formatDateToInput(date)}&end=${formatDateToInput(nextDay)}&results=1`;
+                }
+                
                 if (READ_API_KEY) {
-                    apiUrl += `?api_key=${READ_API_KEY}`;
+                    apiUrl += date ? `&api_key=${READ_API_KEY}` : `?api_key=${READ_API_KEY}`;
                 }
                 
                 const response = await fetch(apiUrl);
@@ -429,7 +433,13 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                return await response.json();
+                const data = await response.json();
+                
+                if (date) {
+                    return data.feeds && data.feeds.length > 0 ? data.feeds[0] : null;
+                }
+                
+                return data;
             } catch (error) {
                 showError(`Gagal mengambil data terakhir: ${error.message}`);
                 return null;
@@ -465,8 +475,8 @@
                     
                     iframe.src = url.toString();
                     
-                    // Tampilkan indikator real-time hanya untuk hari ini
-                    const realTimeIndicator = document.querySelector('.real-time-indicator');
+                    // Tampilkan/sembunyikan indikator real-time
+                    const realTimeIndicator = document.getElementById('real-time-indicator');
                     if (realTimeIndicator) {
                         realTimeIndicator.style.display = isToday ? 'block' : 'none';
                     }
@@ -476,8 +486,8 @@
                     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                     const formattedDate = date.toLocaleDateString('id-ID', dateOptions);
                     
-                    chartTitles[0].textContent = `Frekuensi Alami vs Pengusiran (${isToday ? 'Hari Ini' : formattedDate})`;
-                    chartTitles[1].textContent = `Probabilitas Deteksi Hama (${isToday ? 'Hari Ini' : formattedDate})`;
+                    document.getElementById('chart-title-1').textContent = `Frekuensi Getaran Hama vs Pengusiran (${isToday ? 'Hari Ini' : formattedDate})`;
+                    document.getElementById('chart-title-2').textContent = `Probabilitas Deteksi Hama (${isToday ? 'Hari Ini' : formattedDate})`;
                     
                 } catch (error) {
                     console.error('Error updating chart:', error);
@@ -584,10 +594,10 @@
         }
 
         // Fungsi untuk mengupdate data utama
-        async function updateData() {
+        async function updateData(date = null) {
             try {
                 // Ambil data terakhir dari semua field
-                const lastData = await fetchLastData();
+                const lastData = await fetchLastData(date);
                 
                 // Update status perangkat
                 updateDeviceStatus(lastData);
@@ -608,8 +618,7 @@
                 const repulsionValue = parseFloat(lastData.field2) || 0;
                 document.getElementById('last-repulsion').textContent = `${repulsionValue} Hz`;
                 document.getElementById('lra-freq').textContent = `${repulsionValue} Hz`;
-                document.getElementById('frequency-diff').textContent = `+${repulsionValue - vibrationValue} Hz`;
-                
+            
                 // Update statistik
                 document.getElementById('detection-today').textContent = lastData.field3 || '0';
                 document.getElementById('activation-today').textContent = lastData.field4 || '0';
@@ -626,7 +635,7 @@
                     'Baru saja' : '-';
                 
                 // Update log aktivitas
-                const feeds = await fetchThingSpeakData(FIELD_VIBRATION, 10);
+                const feeds = await fetchThingSpeakData(FIELD_VIBRATION, 10, date);
                 updateActivityLog(feeds);
                 
             } catch (error) {
@@ -667,11 +676,35 @@
             });
         }
 
+        // Fungsi untuk memuat data berdasarkan tanggal yang dipilih
+        async function loadDataForSelectedDate(selectedDate) {
+            const today = new Date();
+            const isToday = formatDateToInput(selectedDate) === formatDateToInput(today);
+            
+            // Update charts
+            loadChartsByDate(selectedDate);
+            
+            // Update data utama
+            await updateData(isToday ? null : selectedDate);
+            
+            // Update statistik
+            if (!isToday) {
+                // Untuk tanggal sebelumnya, hitung total deteksi dan aktivasi
+                const feeds = await fetchThingSpeakData(FIELD_VIBRATION, 1000, selectedDate);
+                const detections = feeds.filter(feed => parseFloat(feed.field1) > 0).length;
+                const activations = feeds.filter(feed => parseFloat(feed.field2) > 0).length;
+                
+                document.getElementById('detection-today').textContent = detections;
+                document.getElementById('activation-today').textContent = activations;
+            }
+        }
+
         // Inisialisasi saat DOM siap
         document.addEventListener('DOMContentLoaded', function() {
             // Set default ke hari ini
             const today = new Date();
             document.getElementById('date-selector').value = formatDateToInput(today);
+            document.getElementById('date-selector').max = formatDateToInput(today);
             
             // Load chart untuk hari ini
             loadChartsByDate(today);
@@ -679,7 +712,7 @@
             // Event listener untuk date picker
             document.getElementById('date-selector').addEventListener('change', function() {
                 const selectedDate = new Date(this.value);
-                loadChartsByDate(selectedDate);
+                loadDataForSelectedDate(selectedDate);
             });
             
             // Setup auto-refresh untuk grafik hari ini
