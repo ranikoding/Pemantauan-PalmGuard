@@ -252,33 +252,25 @@
                     <div class="card-body">
                         <div class="mb-3 p-3 rounded status-inactive" id="accel-status">
                             <div class="d-flex justify-content-between">
-                                <strong>Sensor Accelerometer MEMS (deteksi getaran)</strong>
+                                <strong>Sensor Accelerometer MEMS (Alat Deteksi Getaran)</strong>
                                 <span class="badge bg-secondary" id="accel-badge">Nonaktif</span>
                             </div>
                             <small class="text-muted">Terakhir diperbarui: <span id="accel-update">-</span></small>
                         </div>
                         <div class="mb-3 p-3 rounded status-inactive" id="mic-status">
                             <div class="d-flex justify-content-between">
-                                <strong>Sensor Mikrofon</strong>
+                                <strong>Sensor Mikrofon (Alat Deteksi Suara)</strong>
                                 <span class="badge bg-secondary" id="mic-badge">Nonaktif</span>
                             </div>
                             <small class="text-muted">Sensitivitas: <span id="mic-value">-</span>dB</small>
                         </div>
                         <div class="mb-3 p-3 rounded status-inactive" id="lra-status">
                             <div class="d-flex justify-content-between">
-                                <strong>Aktuator LRA (pengusir)</strong>
+                                <strong>Aktuator LRA (Alat Pengusir)</strong>
                                 <span class="badge bg-secondary" id="lra-badge">Nonaktif</span>
                             </div>
                             <small class="text-muted">Frekuensi: <span id="lra-freq">-</span> Hz</small>
-                        </div>
-                        <div class="mb-3 p-3 rounded status-inactive" id="solar-status">
-                            <div class="d-flex justify-content-between">
-                                <strong>Status Daya</strong>
-                                <span class="badge bg-secondary" id="solar-badge">-</span>
-                            </div>
-                            <small class="text-muted">Sinyal WiFi: <span id="signal-strength">-</span></small>
-                        </div>
-                        <div class="p-3 rounded status-inactive" id="iot-status">
+                        </div> 
                             <div class="d-flex justify-content-between">
                                 <strong>Koneksi IoT</strong>
                                 <span class="badge bg-secondary" id="iot-badge">Tidak Terhubung</span>
@@ -602,8 +594,8 @@
                     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                     const formattedDate = date.toLocaleDateString('id-ID', dateOptions);
                     
-                    document.getElementById('chart-title-1').textContent = `Frekuensi Getaran Hama vs Pengusiran (${isToday ? 'Hari Ini' : formattedDate})`;
-                    document.getElementById('chart-title-2').textContent = `Probabilitas Deteksi Hama (${isToday ? 'Hari Ini' : formattedDate})`;
+                    document.getElementById('chart-title-1').textContent = `Frekuensi Getaran Hama ;
+                    document.getElementById('chart-title-2').textContent = `Probabilitas Deteksi Hama ;
                     
                 } catch (error) {
                     console.error('Error updating chart:', error);
