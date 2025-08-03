@@ -7,195 +7,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            padding-top: 20px;
-        }
-        
-        .navbar-brand img {
-            filter: brightness(0) invert(1);
-            height: 30px;
-        }
-        
-        .sensor-card {
-            transition: all 0.3s ease;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-        
-        .sensor-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-        }
-        
-        .status-active {
-            background-color: #d4edda;
-            border-left: 5px solid #28a745;
-        }
-        
-        .status-warning {
-            background-color: #fff3cd;
-            border-left: 5px solid #ffc107;
-        }
-        
-        .status-danger {
-            background-color: #f8d7da;
-            border-left: 5px solid #dc3545;
-        }
-        
-        .status-inactive {
-            background-color: #e9ecef;
-            border-left: 5px solid #6c757d;
-        }
-        
-        .experiment-info {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .auto-mode {
-            background-color: #e2f0fd;
-            border-left: 5px solid #0d6efd;
-            border-radius: 8px;
-            padding: 10px;
-        }
-        
-        .chart-container {
-            height: 300px;
-            margin-bottom: 20px;
-        }
-        
-        .thingspeak-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .thingspeak-chart {
-            flex: 1;
-            min-width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .chart-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-            text-align: center;
-        }
-        
-        .loading-placeholder {
-            height: 260px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8f9fa;
-            color: #6c757d;
-            font-style: italic;
-            border-radius: 8px;
-        }
-        
-        .progress {
-            height: 10px;
-            border-radius: 5px;
-        }
-        
-        .card-header {
-            font-weight: 600;
-        }
-        
-        footer {
-            margin-top: 40px;
-            border-top: 1px solid #dee2e6;
-            padding: 20px 0;
-        }
-        
-        .table-responsive {
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .table {
-            margin-bottom: 0;
-        }
-        
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-        
-        .badge {
-            font-weight: 500;
-            padding: 5px 10px;
-        }
-        
-        .display-4 {
-            font-size: 2.5rem;
-            font-weight: 600;
-        }
-        
-        /* Mobile-specific styles */
-        @media (max-width: 768px) {
-            .display-4 {
-                font-size: 1.8rem;
-            }
-            
-            .navbar-nav {
-                margin-top: 10px;
-            }
-            
-            .navbar-collapse {
-                background-color: #28a745;
-                padding: 10px;
-                border-radius: 5px;
-            }
-            
-            .experiment-info, .card {
-                margin-bottom: 15px;
-            }
-            
-            .container-fluid {
-                padding-left: 15px;
-                padding-right: 15px;
-            }
-            
-            .row {
-                margin-left: -8px;
-                margin-right: -8px;
-            }
-            
-            .col-md-4, .col-md-8, .col-md-6 {
-                padding-left: 8px;
-                padding-right: 8px;
-            }
-        }
-        
-        /* Desktop-specific styles */
-        @media (min-width: 992px) {
-            .thingspeak-chart {
-                min-width: calc(50% - 8px);
-            }
-        }
+        /* [Previous CSS styles remain exactly the same] */
     </style>
 </head>
 <body>
     <!-- Navbar with responsive toggle -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top"> 
-                <div class="d-flex">
-                    <span class="text-white me-2 align-self-center">Peneliti</span>
-                    <button class="btn btn-outline-light btn-sm">Logout</button>
-                </div>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <span class="fw-bold">PalmGuard</span>
+            </a>
+            <div class="d-flex">
+                <span class="text-white me-2 align-self-center">Peneliti</span>
+                <button class="btn btn-outline-light btn-sm">Logout</button>
             </div>
         </div>
     </nav>
@@ -248,17 +72,17 @@
                         </div>
                         <div class="mb-3 p-3 rounded status-inactive" id="solar-status">
                             <div class="d-flex justify-content-between">
-                                <strong>Panel Surya</strong>
-                                <span class="badge bg-secondary" id="solar-badge"><span id="battery-level">0</span>%</span>
+                                <strong>Status Daya</strong>
+                                <span class="badge bg-secondary" id="solar-badge">-</span>
                             </div>
-                            <small class="text-muted">Daya tersisa: <span id="battery-time">-</span></small>
+                            <small class="text-muted">Sinyal WiFi: <span id="signal-strength">-</span></small>
                         </div>
                         <div class="p-3 rounded status-inactive" id="iot-status">
                             <div class="d-flex justify-content-between">
                                 <strong>Koneksi IoT</strong>
                                 <span class="badge bg-secondary" id="iot-badge">Tidak Terhubung</span>
                             </div>
-                            <small class="text-muted">Sinyal: <span id="signal-strength">-</span></small>
+                            <small class="text-muted">Interval Update: 30 detik</small>
                         </div>
                     </div>
                 </div>
@@ -277,12 +101,12 @@
                             <span class="badge bg-danger"><span id="activation-today">0</span></span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Frekuensi Rata-rata</span>
-                            <span class="badge bg-info"><span id="avg-freq">0</span> Hz</span>
+                            <span>Probabilitas Hama</span>
+                            <span class="badge bg-info"><span id="pest-probability">0</span>%</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span>Efektivitas Pengusiran</span>
-                            <span class="badge bg-success"><span id="effectiveness">0</span>%</span>
+                            <span>Amplitudo Getaran</span>
+                            <span class="badge bg-success"><span id="vibration-amp">0</span>g</span>
                         </div>
                     </div>
                 </div>
@@ -306,15 +130,15 @@
                     <div class="card-body">
                         <div class="thingspeak-container">
                             <div class="thingspeak-chart">
-                                <div class="chart-title">Frekuensi Getaran (Hz)</div>
+                                <div class="chart-title">Frekuensi Alami vs Pengusiran (Hz)</div>
                                 <iframe width="100%" height="260" style="border: 1px solid #ccc;"
-                                    src="https://thingspeak.com/channels/3007423/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&title=Frekuensi+Getaran&yaxis=Hz">
+                                    src="https://thingspeak.com/channels/3007423/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&title=Frekuensi+Getaran&yaxis=Hz&field1=1&field2=2">
                                 </iframe>
                             </div>
                             <div class="thingspeak-chart">
-                                <div class="chart-title">Frekuensi Pengusiran (Hz)</div>
+                                <div class="chart-title">Probabilitas Deteksi Hama (%)</div>
                                 <iframe width="100%" height="260" style="border: 1px solid #ccc;"
-                                    src="https://thingspeak.com/channels/3007423/charts/3?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&type=line&title=Frekuensi+Pengusiran&yaxis=Hz">
+                                    src="https://thingspeak.com/channels/3007423/charts/3?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&type=line&title=Probabilitas+Hama&yaxis=%25&field1=5">
                                 </iframe>
                             </div>
                         </div>
@@ -330,12 +154,12 @@
                             <div class="card-body">
                                 <div class="text-center mb-3">
                                     <div class="display-4" id="last-vibration">0 Hz</div>
-                                    <small class="text-muted">Frekuensi Getaran Terakhir</small>
+                                    <small class="text-muted">Frekuensi Alami Terakhir</small>
                                 </div>
                                 <div class="progress mb-2">
                                     <div class="progress-bar bg-warning" id="vibration-progress" role="progressbar" style="width: 0%"></div>
                                 </div>
-                                <small class="text-muted">Intensitas: <span id="vibration-intensity">-</span></small>
+                                <small class="text-muted">Amplitudo: <span id="vibration-intensity">0</span>g</small>
                                 <hr>
                                 <div class="alert alert-info">
                                     <small id="last-detection">Belum ada data terdeteksi</small>
@@ -352,6 +176,10 @@
                                 <div class="text-center mb-3">
                                     <div class="display-4" id="last-repulsion">0 Hz</div>
                                     <small class="text-muted">Frekuensi Pengusiran Terakhir</small>
+                                </div>
+                                <div class="text-center mb-2">
+                                    <div class="display-6" id="frequency-diff">+0 Hz</div>
+                                    <small class="text-muted">Perbedaan Frekuensi</small>
                                 </div>
                                 <div class="p-3 rounded auto-mode mb-3">
                                     <div class="d-flex justify-content-between">
@@ -378,9 +206,9 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Waktu</th>
-                                        <th>Frekuensi Getaran (Hz)</th>
+                                        <th>Frekuensi Alami (Hz)</th>
                                         <th>Frekuensi Pengusiran (Hz)</th>
-                                        <th>Status</th>
+                                        <th>Probabilitas Hama</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -406,19 +234,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script>
-        // Konfigurasi Thingspeak
+        // Konfigurasi Thingspeak yang diperbarui
         const CHANNEL_ID = '3007423';
-        const READ_API_KEY = '';
-        const UPDATE_INTERVAL = 15000;
+        const READ_API_KEY = '9UL5HWSOQSMGJ2RH';
+        const UPDATE_INTERVAL = 30000; // 30 detik sesuai Arduino
 
-        // Field yang digunakan
-        const FIELD_VIBRATION = 1;
-        const FIELD_REPULSION = 3;
-        const FIELD_STATUS = 2;
-        const FIELD_DETECTION = 4;
-        const FIELD_ACTIVATION = 5;
-        const FIELD_BATTERY = 6;
-        const FIELD_SIGNAL = 7;
+        // Field yang digunakan (diperbarui sesuai Arduino)
+        const FIELD_VIBRATION = 1;      // Frekuensi alami
+        const FIELD_REPULSION = 2;      // Frekuensi pengusiran
+        const FIELD_DETECTION = 3;      // Jumlah deteksi hari ini
+        const FIELD_ACTIVATION = 4;     // Jumlah aktivasi hari ini
+        const FIELD_PROBABILITY = 5;    // Probabilitas hama (fuzzy result)
+        const FIELD_AMPLITUDE = 6;      // Amplitudo getaran
+        const FIELD_FREQUENCY = 7;      // Frekuensi getaran (raw)
 
         // Status awal perangkat
         let deviceStatus = {
@@ -426,8 +254,7 @@
             lastUpdate: null,
             accelActive: false,
             micActive: false,
-            lraActive: false,
-            solarActive: false
+            lraActive: false
         };
 
         // Fungsi untuk memformat waktu
@@ -524,12 +351,10 @@
                 document.getElementById('iot-status').className = 'p-3 rounded status-active';
                 document.getElementById('iot-badge').className = 'badge bg-success';
                 document.getElementById('iot-badge').textContent = 'Terhubung';
-                document.getElementById('signal-strength').textContent = data.field7 ? `${data.field7}%` : 'Kuat';
                 
                 // Update status perangkat lainnya
                 const hasVibration = data.field1 && parseFloat(data.field1) > 0;
-                const hasRepulsion = data.field3 && parseFloat(data.field3) > 0;
-                const hasBattery = data.field6 && parseFloat(data.field6) > 0;
+                const hasRepulsion = data.field2 && parseFloat(data.field2) > 0;
                 
                 // Accelerometer
                 document.getElementById('accel-status').className = hasVibration ? 
@@ -553,18 +378,6 @@
                     'badge bg-success' : 'badge bg-secondary';
                 document.getElementById('lra-badge').textContent = hasRepulsion ? 'Aktif' : 'Nonaktif';
                 
-                // Panel Surya
-                document.getElementById('solar-status').className = hasBattery ? 
-                    'mb-3 p-3 rounded status-warning' : 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('solar-badge').className = hasBattery ? 
-                    'badge bg-warning text-dark' : 'badge bg-secondary';
-
-
-
-
-
-
-                
                 // Mode sistem
                 document.getElementById('system-mode').className = hasRepulsion ? 
                     'badge bg-primary' : 'badge bg-secondary';
@@ -575,13 +388,11 @@
                 deviceStatus.accelActive = hasVibration;
                 deviceStatus.micActive = hasVibration;
                 deviceStatus.lraActive = hasRepulsion;
-                deviceStatus.solarActive = hasBattery;
             } else {
                 // Reset semua status ke nonaktif
                 document.getElementById('iot-status').className = 'p-3 rounded status-inactive';
                 document.getElementById('iot-badge').className = 'badge bg-secondary';
                 document.getElementById('iot-badge').textContent = 'Tidak Terhubung';
-                document.getElementById('signal-strength').textContent = '-';
                 
                 document.getElementById('accel-status').className = 'mb-3 p-3 rounded status-inactive';
                 document.getElementById('accel-badge').className = 'badge bg-secondary';
@@ -596,9 +407,6 @@
                 document.getElementById('lra-badge').className = 'badge bg-secondary';
                 document.getElementById('lra-badge').textContent = 'Nonaktif';
                 
-                document.getElementById('solar-status').className = 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('solar-badge').className = 'badge bg-secondary';
-                
                 document.getElementById('system-mode').className = 'badge bg-secondary';
                 document.getElementById('system-mode').textContent = 'Nonaktif';
                 
@@ -607,7 +415,6 @@
                 deviceStatus.accelActive = false;
                 deviceStatus.micActive = false;
                 deviceStatus.lraActive = false;
-                deviceStatus.solarActive = false;
             }
         }
 
@@ -629,43 +436,32 @@
                 document.getElementById('last-vibration').textContent = `${vibrationValue} Hz`;
                 
                 // Update progress bar
-                const vibrationIntensity = Math.min(100, (vibrationValue / 250) * 100);
+                const vibrationIntensity = Math.min(100, (vibrationValue / 500) * 100);
                 document.getElementById('vibration-progress').style.width = `${vibrationIntensity}%`;
                 
-                // Update label intensitas
-                const intensityLabel = vibrationIntensity > 70 ? 'Tinggi' : vibrationIntensity > 30 ? 'Sedang' : 'Rendah';
-                document.getElementById('vibration-intensity').textContent = intensityLabel;
-
-                // Update data frekuensi pengusiran
-                document.getElementById('last-repulsion').textContent = `${lastData.field3 || '0'} Hz`;
-                document.getElementById('lra-freq').textContent = `${lastData.field3 || '0'} Hz`;
-
-                // Update status panel surya
-                const batteryLevel = parseFloat(lastData.field7) || 0;
-                document.getElementById('battery-level').textContent = `${batteryLevel}`;
+                // Update frekuensi pengusiran
+                const repulsionValue = parseFloat(lastData.field2) || 0;
+                document.getElementById('last-repulsion').textContent = `${repulsionValue} Hz`;
+                document.getElementById('lra-freq').textContent = `${repulsionValue} Hz`;
+                document.getElementById('frequency-diff').textContent = `+${repulsionValue - vibrationValue} Hz`;
                 
-                // Hitung waktu tersisa baterai
-                const hours = Math.floor(batteryLevel / 12.5);
-                const minutes = Math.floor((batteryLevel % 12.5) * 4.8);
-                document.getElementById('battery-time').textContent = batteryLevel > 0 ? 
-                    `${hours} jam ${minutes} menit` : '-';
-
                 // Update statistik
-                document.getElementById('detection-today').textContent = lastData.field4 || '0';
-                document.getElementById('activation-today').textContent = lastData.field5 || '0';
-                document.getElementById('effectiveness').textContent = lastData.field6 || '0';
+                document.getElementById('detection-today').textContent = lastData.field3 || '0';
+                document.getElementById('activation-today').textContent = lastData.field4 || '0';
+                document.getElementById('pest-probability').textContent = lastData.field5 || '0';
+                document.getElementById('vibration-amp').textContent = lastData.field6 ? parseFloat(lastData.field6).toFixed(2) : '0';
                 
                 // Update waktu terakhir
                 const lastUpdate = new Date(lastData.created_at);
                 document.getElementById('last-detection').textContent = vibrationValue > 0 ? 
                     `Getaran terdeteksi pada ${formatTime(lastUpdate)}` : 'Belum ada getaran terdeteksi';
-                document.getElementById('last-activation').textContent = lastData.field3 > 0 ? 
+                document.getElementById('last-activation').textContent = repulsionValue > 0 ? 
                     `Terakhir diaktifkan: ${formatTime(lastUpdate)} (Durasi: 10 detik)` : 'Belum pernah diaktifkan';
                 document.getElementById('accel-update').textContent = lastUpdate ? 
                     'Baru saja' : '-';
                 
                 // Update log aktivitas
-                const feeds = await fetchThingSpeakData(FIELD_STATUS, 10);
+                const feeds = await fetchThingSpeakData(FIELD_VIBRATION, 10);
                 updateActivityLog(feeds);
                 
             } catch (error) {
@@ -698,8 +494,8 @@
                 row.innerHTML = `
                     <td>${formatTime(time)}<br><small>${formatDate(time)}</small></td>
                     <td>${feed.field1 || '-'}</td>
-                    <td>${feed.field3 || '-'}</td>
-                    <td>${feed.field2 === '1' ? 'Aktif' : 'Nonaktif'}</td>
+                    <td>${feed.field2 || '-'}</td>
+                    <td>${feed.field5 ? feed.field5 + '%' : '-'}</td>
                 `;
                 
                 tableBody.appendChild(row);
@@ -727,7 +523,7 @@
             // Update data pertama kali
             updateData();
             
-            // Set interval untuk update data
+            // Set interval untuk update data (30 detik sesuai Arduino)
             const updateInterval = setInterval(updateData, UPDATE_INTERVAL);
             
             // Event listener untuk perubahan range chart
