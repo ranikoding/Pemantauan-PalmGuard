@@ -257,10 +257,7 @@
                                     <div class="display-4" id="last-repulsion">0 Hz</div>
                                     <small class="text-muted">Frekuensi Pengusiran Terakhir</small>
                                 </div>
-                                <div class="text-center mb-2">
-                                    <div class="display-6" id="frequency-diff">+0 Hz</div>
-                                    <small class="text-muted">Perbedaan Frekuensi</small>
-                                </div>
+            
                                 <div class="p-3 rounded auto-mode mb-3">
                                     <div class="d-flex justify-content-between">
                                         <strong>Mode Operasi</strong>
@@ -621,10 +618,9 @@
                 const repulsionValue = parseFloat(lastData.field2) || 0;
                 document.getElementById('last-repulsion').textContent = `${repulsionValue} Hz`;
                 document.getElementById('lra-freq').textContent = `${repulsionValue} Hz`;
-                document.getElementById('frequency-diff').textContent = `+${repulsionValue - vibrationValue} Hz`;
-                
+             
                 // Update statistik
-                document.getElementById('detection-today').textContent = lastData.field3 || '0';
+               document.getElementById('detection-today').textContent = lastData.field3 ? Math.round(lastData.field3) : '0';
                 document.getElementById('activation-today').textContent = lastData.field4 || '0';
                 document.getElementById('pest-probability').textContent = lastData.field5 || '0';
                 document.getElementById('vibration-amp').textContent = lastData.field6 ? parseFloat(lastData.field6).toFixed(2) : '0';
