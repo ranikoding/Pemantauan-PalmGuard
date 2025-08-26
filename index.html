@@ -98,19 +98,25 @@
             font-weight: 500;
             padding: 5px 8px;
         }
-        .debug-info {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 0.9em;
+        .btn-show-more {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
         }
-        .alert-warning {
-            background-color: #fff3cd;
-            border-color: #ffecb5;
-            color: #856404;
+        .btn-show-more:hover {
+            background: linear-gradient(45deg, #5a6268, #495057);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .log-row-hidden {
+            display: none;
+        }
+        .log-loading {
+            background-color: #f8f9fa;
         }
     </style>
 </head>
@@ -129,12 +135,6 @@
     </nav>
 
     <div class="container-fluid mt-3">
-        <!-- Debug Information -->
-        <div class="alert alert-warning" id="debug-alert" style="display: none;">
-            <h6>Debug Information:</h6>
-            <div id="debug-content"></div>
-        </div>
-
         <div class="row">
             <!-- Left Column -->
             <div class="col-lg-4 col-md-12">
@@ -314,8 +314,9 @@
                 </div>
 
                 <div class="card mt-4">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Log Aktivitas Terkini</h5>
+                        <small class="text-white-50">5 data terbaru</small>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -335,6 +336,12 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="text-center p-3 border-top bg-light" id="show-more-section" style="display: none;">
+                            <button class="btn btn-show-more" id="show-more-btn">
+                                <i class="bi bi-chevron-down me-1"></i>
+                                Tampilkan Selengkapnya
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -384,26 +391,10 @@
             lastSync: null
         };
 
-        // Fungsi untuk debug logging
-        function debugLog(message, data = null) {
-            const timestamp = new Date().toLocaleTimeString();
-            console.log(`[${timestamp}] ${message}`, data);
-            
-            // Tampilkan di debug panel
-            const debugContent = document.getElementById('debug-content');
-            const debugAlert = document.getElementById('debug-alert');
-            
-            if (debugContent && debugAlert) {
-                debugAlert.style.display = 'block';
-                debugContent.innerHTML += `<div><strong>[${timestamp}]</strong> ${message}</div>`;
-                
-                // Batasi jumlah log yang ditampilkan
-                const logs = debugContent.children;
-                if (logs.length > 10) {
-                    debugContent.removeChild(logs[0]);
-                }
-            }
-        }
+        // Variables untuk log aktivitas
+        let allLogData = [];
+        let showingMore = false;
+        const INITIAL_LOG_COUNT = 5;
 
         // Fungsi untuk memformat waktu
         function formatTime(date) {
@@ -437,7 +428,6 @@
         // Fungsi untuk menampilkan pesan error
         function showError(message) {
             console.error(message);
-            debugLog(`ERROR: ${message}`);
             
             const errorDiv = document.createElement('div');
             errorDiv.className = 'alert alert-danger alert-dismissible fade show';
@@ -470,8 +460,6 @@
                     apiUrl += `&api_key=${READ_API_KEY}`;
                 }
                 
-                debugLog(`Fetching data from field ${field}:`, apiUrl);
-                
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
@@ -479,8 +467,6 @@
                 }
                 
                 const data = await response.json();
-                debugLog(`Received data for field ${field}:`, data);
-                
                 return data.feeds || [];
             } catch (error) {
                 const errorMsg = `Gagal mengambil data field ${field}: ${error.message}`;
@@ -505,8 +491,6 @@
                     apiUrl += date ? `&api_key=${READ_API_KEY}` : `?api_key=${READ_API_KEY}`;
                 }
                 
-                debugLog('Fetching last data:', apiUrl);
-                
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
@@ -514,7 +498,6 @@
                 }
                 
                 const data = await response.json();
-                debugLog('Last data received:', data);
                 
                 if (date) {
                     return data.feeds && data.feeds.length > 0 ? data.feeds[0] : null;
@@ -565,7 +548,6 @@
                     document.getElementById('chart-title-2').textContent = `Probabilitas Deteksi Hama (${isToday ? 'Hari Ini' : formattedDate})`;
                     
                 } catch (error) {
-                    debugLog('Error updating chart:', error);
                     const placeholder = document.createElement('div');
                     placeholder.className = 'loading-placeholder';
                     placeholder.textContent = 'Gagal memuat grafik';
@@ -597,11 +579,6 @@
                 syncStatus.className = 'badge bg-warning';
                 syncStatus.textContent = 'Menunggu Data';
             }
-
-            debugLog('Data consistency check:', {
-                arduinoProbability: arduinoProbability,
-                lastSync: dataConsistency.lastSync
-            });
         }
 
         // Fungsi untuk mengupdate status perangkat
@@ -612,12 +589,6 @@
             // Cek koneksi (jika data ada dan tidak lebih dari 5 menit yang lalu)
             const isConnected = data && (now - lastUpdate) < (5 * 60 * 1000);
             
-            debugLog('Device status check:', {
-                isConnected: isConnected,
-                lastUpdate: lastUpdate,
-                data: data
-            });
-
             if (isConnected) {
                 // Update status koneksi IoT
                 document.getElementById('iot-status').className = 'p-3 rounded status-active';
@@ -693,8 +664,6 @@
         // Fungsi untuk mengupdate data utama
         async function updateData(date = null) {
             try {
-                debugLog('Starting data update...', { date: date });
-                
                 // Ambil data terakhir dari semua field
                 const lastData = await fetchLastData(date);
                 
@@ -705,7 +674,6 @@
                 checkDataConsistency(lastData);
                 
                 if (!lastData) {
-                    debugLog('No data received');
                     return;
                 }
                 
@@ -719,16 +687,6 @@
                 const probabilityArduino = parseFloat(lastData.field5) || 0; // Field 5: Probabilitas dari Arduino
                 const amplitudeValue = parseFloat(lastData.field6) || 0;   // Field 6: Amplitudo getaran
                 const rawFrequency = parseFloat(lastData.field7) || 0;     // Field 7: Frekuensi mentah
-                
-                debugLog('Parsed data values:', {
-                    vibrationValue,
-                    repulsionValue,
-                    detectionCount,
-                    activationCount,
-                    probabilityArduino,
-                    amplitudeValue,
-                    rawFrequency
-                });
 
                 // Update frekuensi getaran
                 document.getElementById('last-vibration').textContent = `${vibrationValue.toFixed(2)} Hz`;
@@ -764,34 +722,26 @@
                 // Update log aktivitas dengan data yang lebih lengkap
                 await updateActivityLogWithAllData(date);
                 
-                debugLog('Data update completed successfully');
-                
             } catch (error) {
                 const errorMsg = `Gagal memperbarui data: ${error.message}`;
                 showError(errorMsg);
-                debugLog('Error in updateData:', error);
             }
         }
 
-        // Fungsi untuk mengupdate tabel log aktivitas dengan semua data
+        // Fungsi untuk mengupdate tabel log aktivitas dengan semua data dan fitur "Show More"
         async function updateActivityLogWithAllData(date = null) {
             try {
-                // Ambil data dari beberapa field sekaligus
+                // Ambil data dari beberapa field sekaligus dengan jumlah lebih banyak untuk fitur "Show More"
                 const [vibrationFeeds, repulsionFeeds, probabilityFeeds, amplitudeFeeds] = await Promise.all([
-                    fetchThingSpeakData(FIELD_MAPPING.VIBRATION_FREQ, 10, date),
-                    fetchThingSpeakData(FIELD_MAPPING.REPULSION_FREQ, 10, date),
-                    fetchThingSpeakData(FIELD_MAPPING.PROBABILITY_ARDUINO, 10, date),
-                    fetchThingSpeakData(FIELD_MAPPING.AMPLITUDE, 10, date)
+                    fetchThingSpeakData(FIELD_MAPPING.VIBRATION_FREQ, 50, date),
+                    fetchThingSpeakData(FIELD_MAPPING.REPULSION_FREQ, 50, date),
+                    fetchThingSpeakData(FIELD_MAPPING.PROBABILITY_ARDUINO, 50, date),
+                    fetchThingSpeakData(FIELD_MAPPING.AMPLITUDE, 50, date)
                 ]);
                 
-                debugLog('Log data fetched:', {
-                    vibrationFeeds: vibrationFeeds.length,
-                    repulsionFeeds: repulsionFeeds.length,
-                    probabilityFeeds: probabilityFeeds.length,
-                    amplitudeFeeds: amplitudeFeeds.length
-                });
-
                 const tableBody = document.querySelector('#activity-log tbody');
+                const showMoreSection = document.getElementById('show-more-section');
+                const showMoreBtn = document.getElementById('show-more-btn');
                 
                 if (!vibrationFeeds || vibrationFeeds.length === 0) {
                     tableBody.innerHTML = `
@@ -799,62 +749,26 @@
                             <td colspan="5" class="text-center text-muted">Tidak ada data yang tersedia</td>
                         </tr>
                     `;
+                    showMoreSection.style.display = 'none';
                     return;
                 }
                 
-                tableBody.innerHTML = '';
+                // Simpan semua data ke variabel global
+                allLogData = vibrationFeeds.slice().reverse();
                 
-                // Ambil 5 data terbaru dan gabungkan berdasarkan timestamp
-                const recentFeeds = vibrationFeeds.slice(-5).reverse();
+                // Reset tampilan
+                showingMore = false;
+                displayLogData();
                 
-                recentFeeds.forEach(vibrationFeed => {
-                    const timestamp = vibrationFeed.created_at;
-                    
-                    // Cari data yang sesuai berdasarkan timestamp
-                    const repulsionFeed = repulsionFeeds.find(f => f.created_at === timestamp);
-                    const probabilityFeed = probabilityFeeds.find(f => f.created_at === timestamp);
-                    const amplitudeFeed = amplitudeFeeds.find(f => f.created_at === timestamp);
-                    
-                    const row = document.createElement('tr');
-                    const time = new Date(timestamp);
-                    
-                    // Tambahkan highlight jika data terbaru
-                    if (recentFeeds.indexOf(vibrationFeed) === 0) {
-                        row.className = 'table-warning';
-                    }
-                    
-                    const vibrationValue = parseFloat(vibrationFeed.field1) || 0;
-                    const repulsionValue = repulsionFeed ? (parseFloat(repulsionFeed.field2) || 0) : 0;
-                    const probabilityValue = probabilityFeed ? (parseFloat(probabilityFeed.field5) || 0) : 0;
-                    const amplitudeValue = amplitudeFeed ? (parseFloat(amplitudeFeed.field6) || 0) : 0;
-                    
-                    row.innerHTML = `
-                        <td>
-                            ${formatTime(time)}<br>
-                            <small class="text-muted">${formatDate(time)}</small>
-                        </td>
-                        <td>
-                            <strong>${vibrationValue.toFixed(2)}</strong>
-                            ${vibrationValue > 0 ? '<span class="badge bg-success ms-1">Aktif</span>' : ''}
-                        </td>
-                        <td>
-                            <strong>${repulsionValue > 0 ? repulsionValue.toFixed(2) : '-'}</strong>
-                            ${repulsionValue > 0 ? '<span class="badge bg-danger ms-1">Aktif</span>' : ''}
-                        </td>
-                        <td>
-                            <strong>${probabilityValue.toFixed(1)}%</strong>
-                            ${probabilityValue > 50 ? '<span class="badge bg-warning ms-1">Tinggi</span>' : ''}
-                        </td>
-                        <td>${amplitudeValue.toFixed(3)}</td>
-                    `;
-                    
-                    tableBody.appendChild(row);
-                });
-                
-                debugLog('Activity log updated successfully');
+                // Tampilkan tombol "Show More" jika ada lebih dari 5 data
+                if (allLogData.length > INITIAL_LOG_COUNT) {
+                    showMoreSection.style.display = 'block';
+                    updateShowMoreButton();
+                } else {
+                    showMoreSection.style.display = 'none';
+                }
                 
             } catch (error) {
-                debugLog('Error updating activity log:', error);
                 const tableBody = document.querySelector('#activity-log tbody');
                 tableBody.innerHTML = `
                     <tr>
@@ -863,13 +777,93 @@
                 `;
             }
         }
+        
+        // Fungsi untuk menampilkan data log berdasarkan status "Show More"
+        function displayLogData() {
+            const tableBody = document.querySelector('#activity-log tbody');
+            tableBody.innerHTML = '';
+            
+            const dataToShow = showingMore ? allLogData : allLogData.slice(0, INITIAL_LOG_COUNT);
+            
+            dataToShow.forEach((vibrationFeed, index) => {
+                const timestamp = vibrationFeed.created_at;
+                
+                // Cari data yang sesuai berdasarkan timestamp
+                const repulsionFeed = allLogData.find(f => f.created_at === timestamp);
+                const probabilityFeed = allLogData.find(f => f.created_at === timestamp);
+                const amplitudeFeed = allLogData.find(f => f.created_at === timestamp);
+                
+                const row = document.createElement('tr');
+                const time = new Date(timestamp);
+                
+                // Tambahkan highlight jika data terbaru
+                if (index === 0) {
+                    row.className = 'table-warning';
+                }
+                
+                // Tambahkan class untuk baris yang tersembunyi
+                if (!showingMore && index >= INITIAL_LOG_COUNT) {
+                    row.className += ' log-row-hidden';
+                }
+                
+                const vibrationValue = parseFloat(vibrationFeed.field1) || 0;
+                const repulsionValue = repulsionFeed ? (parseFloat(repulsionFeed.field2) || 0) : 0;
+                const probabilityValue = probabilityFeed ? (parseFloat(probabilityFeed.field5) || 0) : 0;
+                const amplitudeValue = amplitudeFeed ? (parseFloat(amplitudeFeed.field6) || 0) : 0;
+                
+                row.innerHTML = `
+                    <td>
+                        ${formatTime(time)}<br>
+                        <small class="text-muted">${formatDate(time)}</small>
+                    </td>
+                    <td>
+                        <strong>${vibrationValue.toFixed(2)}</strong>
+                        ${vibrationValue > 0 ? '<span class="badge bg-success ms-1">Aktif</span>' : ''}
+                    </td>
+                    <td>
+                        <strong>${repulsionValue > 0 ? repulsionValue.toFixed(2) : '-'}</strong>
+                        ${repulsionValue > 0 ? '<span class="badge bg-danger ms-1">Aktif</span>' : ''}
+                    </td>
+                    <td>
+                        <strong>${probabilityValue.toFixed(1)}%</strong>
+                        ${probabilityValue > 50 ? '<span class="badge bg-warning ms-1">Tinggi</span>' : ''}
+                    </td>
+                    <td>${amplitudeValue.toFixed(3)}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk update tombol "Show More"
+        function updateShowMoreButton() {
+            const showMoreBtn = document.getElementById('show-more-btn');
+            const remainingCount = allLogData.length - INITIAL_LOG_COUNT;
+            
+            if (showingMore) {
+                showMoreBtn.innerHTML = `
+                    <i class="bi bi-chevron-up me-1"></i>
+                    Tampilkan Lebih Sedikit
+                `;
+            } else {
+                showMoreBtn.innerHTML = `
+                    <i class="bi bi-chevron-down me-1"></i>
+                    Tampilkan Selengkapnya (+${remainingCount} data)
+                `;
+            }
+        }
+        
+        // Fungsi untuk handle klik tombol "Show More"
+        function toggleShowMore() {
+            showingMore = !showingMore;
+            displayLogData();
+            updateShowMoreButton();
+        }
 
         // Fungsi untuk memuat data berdasarkan tanggal yang dipilih
         async function loadDataForSelectedDate(selectedDate) {
             const today = new Date();
             const isToday = formatDateToInput(selectedDate) === formatDateToInput(today);
-            
-            debugLog('Loading data for selected date:', { selectedDate, isToday });
             
             // Update charts
             loadChartsByDate(selectedDate);
@@ -886,8 +880,6 @@
         // Fungsi untuk update statistik historical
         async function updateHistoricalStatistics(date) {
             try {
-                debugLog('Updating historical statistics for:', date);
-                
                 // Ambil semua data untuk tanggal yang dipilih
                 const [detectionFeeds, activationFeeds, probabilityFeeds] = await Promise.all([
                     fetchThingSpeakData(FIELD_MAPPING.DETECTION_COUNT, 1000, date),
@@ -904,14 +896,8 @@
                 document.getElementById('detection-today').textContent = totalDetections;
                 document.getElementById('activation-today').textContent = totalActivations;
                 
-                debugLog('Historical statistics updated:', {
-                    totalDetections,
-                    totalActivations,
-                    avgProbability
-                });
-                
             } catch (error) {
-                debugLog('Error updating historical statistics:', error);
+                console.error('Error updating historical statistics:', error);
             }
         }
 
@@ -931,8 +917,6 @@
 
         // Inisialisasi saat DOM siap
         document.addEventListener('DOMContentLoaded', function() {
-            debugLog('DOM loaded, initializing PalmGuard dashboard...');
-            
             // Set default ke hari ini
             const today = new Date();
             document.getElementById('date-selector').value = formatDateToInput(today);
@@ -944,8 +928,12 @@
             // Event listener untuk date picker
             document.getElementById('date-selector').addEventListener('change', function() {
                 const selectedDate = new Date(this.value);
-                debugLog('Date changed:', selectedDate);
                 loadDataForSelectedDate(selectedDate);
+            });
+            
+            // Event listener untuk tombol "Show More"
+            document.getElementById('show-more-btn').addEventListener('click', function() {
+                toggleShowMore();
             });
             
             // Setup auto-refresh untuk grafik hari ini
@@ -970,26 +958,12 @@
             const iframes = document.querySelectorAll('.thingspeak-container iframe');
             iframes.forEach(iframe => {
                 iframe.addEventListener('error', function() {
-                    debugLog('Chart loading error:', this.src);
                     const placeholder = document.createElement('div');
                     placeholder.className = 'loading-placeholder';
                     placeholder.textContent = 'Gagal memuat grafik: ' + this.parentNode.querySelector('.chart-title').textContent;
                     this.parentNode.replaceChild(placeholder, this);
                 });
             });
-            
-            // Debug toggle button
-            let debugToggle = false;
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-                    debugToggle = !debugToggle;
-                    const debugAlert = document.getElementById('debug-alert');
-                    debugAlert.style.display = debugToggle ? 'block' : 'none';
-                    debugLog('Debug mode toggled:', debugToggle);
-                }
-            });
-            
-            debugLog('PalmGuard dashboard initialized successfully');
         });
     </script>
 </body>
