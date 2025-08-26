@@ -313,7 +313,7 @@
                 <div class="card mt-4">
                     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Log Aktivitas Terkini</h5>
-                        <small class="text-white-50">5 data terbaru</small>
+                        <small class="text-white-50" id="log-subtitle">5 data terbaru</small>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -737,6 +737,20 @@
                 
                 const tableBody = document.querySelector('#activity-log tbody');
                 const showMoreSection = document.getElementById('show-more-section');
+                const logSubtitle = document.getElementById('log-subtitle');
+                
+                // Update subtitle log berdasarkan tanggal yang dipilih
+                const selectedDate = new Date(document.getElementById('date-selector').value);
+                const today = new Date();
+                const isToday = formatDateToInput(selectedDate) === formatDateToInput(today);
+                
+                if (isToday) {
+                    logSubtitle.textContent = '5 data terbaru';
+                } else {
+                    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    const formattedDate = selectedDate.toLocaleDateString('id-ID', dateOptions);
+                    logSubtitle.textContent = `Data pada ${formattedDate}`;
+                }
                 
                 if (!vibrationFeeds || vibrationFeeds.length === 0) {
                     tableBody.innerHTML = `
@@ -966,7 +980,7 @@
                     const placeholder = document.createElement('div');
                     placeholder.className = 'loading-placeholder';
                     placeholder.textContent = 'Gagal memuat grafik: ' + this.parentNode.querySelector('.chart-title').textContent;
-                    this.parentNode.replaceChild(placeholder, this);
+                    this.parentNode.replaceChild(placeholder, iframe);
                 });
             });
         });
