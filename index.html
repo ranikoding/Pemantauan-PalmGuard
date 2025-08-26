@@ -98,6 +98,20 @@
             font-weight: 500;
             padding: 5px 8px;
         }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffecb5;
+            color: #856404;
+        }
     </style>
 </head>
 <body>
@@ -115,6 +129,12 @@
     </nav>
 
     <div class="container-fluid mt-3">
+        <!-- Debug Information -->
+        <div class="alert alert-warning" id="debug-alert" style="display: none;">
+            <h6>Debug Information:</h6>
+            <div id="debug-content"></div>
+        </div>
+
         <div class="row">
             <!-- Left Column -->
             <div class="col-lg-4 col-md-12">
@@ -184,12 +204,33 @@
                             <span class="badge bg-danger"><span id="activation-today">0</span></span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Probabilitas Hama</span>
+                            <span>Probabilitas Hama (Arduino)</span>
                             <span class="badge bg-info"><span id="pest-probability">0</span>%</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span>Amplitudo Getaran</span>
                             <span class="badge bg-success"><span id="vibration-amp">0</span>g</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Consistency Check -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">Konsistensi Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Probabilitas Arduino:</small>
+                            <strong id="arduino-probability">-</strong>%
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Probabilitas FFT:</small>
+                            <strong id="fft-probability">-</strong>%
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Status Sinkronisasi:</small>
+                            <span class="badge bg-secondary" id="sync-status">Checking...</span>
                         </div>
                     </div>
                 </div>
@@ -200,17 +241,16 @@
                 <div class="card mb-4">
                     <div class="card-header bg-success text-white position-relative">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Frekuensi Getaran 11</h5>
+                            <h5 class="card-title mb-0">Data Real-time</h5>
                             <div class="date-selector-container">
                                 <input type="date" id="date-selector" class="form-control form-control-sm">
                             </div>
                         </div>
-        
                     </div>
                     <div class="card-body">
                         <div class="thingspeak-container">
                             <div class="thingspeak-chart position-relative">
-                                <div class="chart-title" id="chart-title-1">Frekuensi Getaran Hama  124(Hz)</div>
+                                <div class="chart-title" id="chart-title-1">Frekuensi Getaran Hama (Hz)</div>
                                 <iframe width="100%" height="260" style="border: 1px solid #ccc;"
                                     src="https://thingspeak.com/channels/3007423/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&title=Frekuensi+Getaran&yaxis=Hz&days=1">
                                 </iframe>
@@ -218,7 +258,7 @@
                             <div class="thingspeak-chart position-relative">
                                 <div class="chart-title" id="chart-title-2">Probabilitas Deteksi Hama (%)</div>
                                 <iframe width="100%" height="260" style="border: 1px solid #ccc;"
-                                    src="https://thingspeak.com/channels/3007423/charts/3?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&type=line&title=Probabilitas+Hama&yaxis=%25&days=1">
+                                    src="https://thingspeak.com/channels/3007423/charts/5?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&type=line&title=Probabilitas+Hama&yaxis=%25&days=1">
                                 </iframe>
                             </div>
                         </div>
@@ -271,9 +311,6 @@
                             </div>
                         </div>
                     </div>
-
-
-                    
                 </div>
 
                 <div class="card mt-4">
@@ -286,14 +323,15 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Waktu</th>
-                                        <th>Frekuensi Getaran Hama 22 (Hz)</th>
+                                        <th>Frekuensi Getaran (Hz)</th>
                                         <th>Frekuensi Pengusiran (Hz)</th>
-                                        <th>Probabilitas Hama</th>
+                                        <th>Probabilitas Hama (%)</th>
+                                        <th>Amplitudo (g)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">Memuat data...</td>
+                                        <td colspan="5" class="text-center text-muted">Memuat data...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -319,14 +357,16 @@
         const READ_API_KEY = '9UL5HWSOQSMGJ2RH';
         const UPDATE_INTERVAL = 30000; // 30 detik
 
-        // Field yang digunakan
-        const FIELD_VIBRATION = 1;      // Frekuensi alami
-        const FIELD_REPULSION = 2;      // Frekuensi pengusiran
-        const FIELD_DETECTION = 3;      // Jumlah deteksi hari ini
-        const FIELD_ACTIVATION = 4;     // Jumlah aktivasi hari ini
-        const FIELD_PROBABILITY = 5;    // Probabilitas hama (fuzzy result)
-        const FIELD_AMPLITUDE = 6;      // Amplitudo getaran
-        const FIELD_FREQUENCY = 7;      // Frekuensi getaran (raw)
+        // Field mapping berdasarkan flowchart
+        const FIELD_MAPPING = {
+            VIBRATION_FREQ: 1,      // Frekuensi getaran dari FFT
+            REPULSION_FREQ: 2,      // Frekuensi pengusiran LRA
+            DETECTION_COUNT: 3,     // Jumlah deteksi (dari Arduino)
+            ACTIVATION_COUNT: 4,    // Jumlah aktivasi pengusir
+            PROBABILITY_ARDUINO: 5, // Probabilitas dari Arduino (hasil fuzzy logic)
+            AMPLITUDE: 6,           // Amplitudo getaran
+            RAW_FREQUENCY: 7        // Frekuensi mentah (sebelum FFT)
+        };
 
         // Status awal perangkat
         let deviceStatus = {
@@ -336,6 +376,34 @@
             micActive: false,
             lraActive: false
         };
+
+        // Data untuk konsistensi check
+        let dataConsistency = {
+            arduinoProbability: 0,
+            fftProbability: 0,
+            lastSync: null
+        };
+
+        // Fungsi untuk debug logging
+        function debugLog(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] ${message}`, data);
+            
+            // Tampilkan di debug panel
+            const debugContent = document.getElementById('debug-content');
+            const debugAlert = document.getElementById('debug-alert');
+            
+            if (debugContent && debugAlert) {
+                debugAlert.style.display = 'block';
+                debugContent.innerHTML += `<div><strong>[${timestamp}]</strong> ${message}</div>`;
+                
+                // Batasi jumlah log yang ditampilkan
+                const logs = debugContent.children;
+                if (logs.length > 10) {
+                    debugContent.removeChild(logs[0]);
+                }
+            }
+        }
 
         // Fungsi untuk memformat waktu
         function formatTime(date) {
@@ -369,6 +437,8 @@
         // Fungsi untuk menampilkan pesan error
         function showError(message) {
             console.error(message);
+            debugLog(`ERROR: ${message}`);
+            
             const errorDiv = document.createElement('div');
             errorDiv.className = 'alert alert-danger alert-dismissible fade show';
             errorDiv.innerHTML = `
@@ -384,7 +454,7 @@
             }, 5000);
         }
 
-        // Fungsi untuk mengambil data dari Thingspeak
+        // Fungsi untuk mengambil data dari Thingspeak dengan error handling yang lebih baik
         async function fetchThingSpeakData(field, results = 10, date = null) {
             try {
                 let apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/${field}.json?results=${results}`;
@@ -400,6 +470,8 @@
                     apiUrl += `&api_key=${READ_API_KEY}`;
                 }
                 
+                debugLog(`Fetching data from field ${field}:`, apiUrl);
+                
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
@@ -407,9 +479,12 @@
                 }
                 
                 const data = await response.json();
+                debugLog(`Received data for field ${field}:`, data);
+                
                 return data.feeds || [];
             } catch (error) {
-                showError(`Gagal mengambil data field ${field}: ${error.message}`);
+                const errorMsg = `Gagal mengambil data field ${field}: ${error.message}`;
+                showError(errorMsg);
                 return [];
             }
         }
@@ -430,6 +505,8 @@
                     apiUrl += date ? `&api_key=${READ_API_KEY}` : `?api_key=${READ_API_KEY}`;
                 }
                 
+                debugLog('Fetching last data:', apiUrl);
+                
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
@@ -437,6 +514,7 @@
                 }
                 
                 const data = await response.json();
+                debugLog('Last data received:', data);
                 
                 if (date) {
                     return data.feeds && data.feeds.length > 0 ? data.feeds[0] : null;
@@ -444,7 +522,8 @@
                 
                 return data;
             } catch (error) {
-                showError(`Gagal mengambil data terakhir: ${error.message}`);
+                const errorMsg = `Gagal mengambil data terakhir: ${error.message}`;
+                showError(errorMsg);
                 return null;
             }
         }
@@ -478,22 +557,15 @@
                     
                     iframe.src = url.toString();
                     
-                    // Tampilkan/sembunyikan indikator real-time
-                    const realTimeIndicator = document.getElementById('real-time-indicator');
-                    if (realTimeIndicator) {
-                        realTimeIndicator.style.display = isToday ? 'block' : 'none';
-                    }
-                    
                     // Update judul chart berdasarkan tanggal
-                    const chartTitles = document.querySelectorAll('.chart-title');
                     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                     const formattedDate = date.toLocaleDateString('id-ID', dateOptions);
                     
-                    document.getElementById('chart-title-1').textContent = `Frekuensi Getaran Hama 33 (${isToday ? 'Hari Ini' : formattedDate})`;
+                    document.getElementById('chart-title-1').textContent = `Frekuensi Getaran Hama (${isToday ? 'Hari Ini' : formattedDate})`;
                     document.getElementById('chart-title-2').textContent = `Probabilitas Deteksi Hama (${isToday ? 'Hari Ini' : formattedDate})`;
                     
                 } catch (error) {
-                    console.error('Error updating chart:', error);
+                    debugLog('Error updating chart:', error);
                     const placeholder = document.createElement('div');
                     placeholder.className = 'loading-placeholder';
                     placeholder.textContent = 'Gagal memuat grafik';
@@ -502,18 +574,34 @@
             });
         }
 
-        // Fungsi untuk auto-refresh iframe
-        function setupChartAutoRefresh() {
-            setInterval(() => {
-                const dateSelector = document.getElementById('date-selector');
-                const selectedDate = new Date(dateSelector.value);
-                const today = new Date();
-                
-                // Hanya refresh jika yang ditampilkan adalah data hari ini
-                if (formatDateToInput(selectedDate) === formatDateToInput(today)) {
-                    loadChartsByDate(selectedDate);
-                }
-            }, UPDATE_INTERVAL);
+        // Fungsi untuk cek konsistensi data
+        function checkDataConsistency(data) {
+            if (!data) return;
+
+            // Ambil probabilitas dari Arduino (field5)
+            const arduinoProbability = parseFloat(data.field5) || 0;
+            
+            // Update data consistency
+            dataConsistency.arduinoProbability = arduinoProbability;
+            dataConsistency.lastSync = new Date();
+
+            // Update tampilan
+            document.getElementById('arduino-probability').textContent = arduinoProbability.toFixed(1);
+            
+            // Status sinkronisasi
+            const syncStatus = document.getElementById('sync-status');
+            if (arduinoProbability > 0) {
+                syncStatus.className = 'badge bg-success';
+                syncStatus.textContent = 'Tersinkron';
+            } else {
+                syncStatus.className = 'badge bg-warning';
+                syncStatus.textContent = 'Menunggu Data';
+            }
+
+            debugLog('Data consistency check:', {
+                arduinoProbability: arduinoProbability,
+                lastSync: dataConsistency.lastSync
+            });
         }
 
         // Fungsi untuk mengupdate status perangkat
@@ -524,13 +612,19 @@
             // Cek koneksi (jika data ada dan tidak lebih dari 5 menit yang lalu)
             const isConnected = data && (now - lastUpdate) < (5 * 60 * 1000);
             
+            debugLog('Device status check:', {
+                isConnected: isConnected,
+                lastUpdate: lastUpdate,
+                data: data
+            });
+
             if (isConnected) {
                 // Update status koneksi IoT
                 document.getElementById('iot-status').className = 'p-3 rounded status-active';
                 document.getElementById('iot-badge').className = 'badge bg-success';
                 document.getElementById('iot-badge').textContent = 'Terhubung';
                 
-                // Update status perangkat lainnya
+                // Update status perangkat lainnya berdasarkan data aktual
                 const hasVibration = data.field1 && parseFloat(data.field1) > 0;
                 const hasRepulsion = data.field2 && parseFloat(data.field2) > 0;
                 
@@ -599,84 +693,175 @@
         // Fungsi untuk mengupdate data utama
         async function updateData(date = null) {
             try {
+                debugLog('Starting data update...', { date: date });
+                
                 // Ambil data terakhir dari semua field
                 const lastData = await fetchLastData(date);
                 
                 // Update status perangkat
                 updateDeviceStatus(lastData);
                 
-                if (!lastData) return;
+                // Cek konsistensi data
+                checkDataConsistency(lastData);
+                
+                if (!lastData) {
+                    debugLog('No data received');
+                    return;
+                }
                 
                 const now = new Date();
                 
-                // Update data frekuensi getaran
-                const vibrationValue = parseFloat(lastData.field1) || 0;
-                document.getElementById('last-vibration').textContent = `${vibrationValue} Hz`;
+                // Update data berdasarkan field mapping yang benar
+                const vibrationValue = parseFloat(lastData.field1) || 0; // Field 1: Frekuensi getaran dari FFT
+                const repulsionValue = parseFloat(lastData.field2) || 0;  // Field 2: Frekuensi pengusiran LRA
+                const detectionCount = parseFloat(lastData.field3) || 0;  // Field 3: Jumlah deteksi
+                const activationCount = parseFloat(lastData.field4) || 0; // Field 4: Jumlah aktivasi
+                const probabilityArduino = parseFloat(lastData.field5) || 0; // Field 5: Probabilitas dari Arduino
+                const amplitudeValue = parseFloat(lastData.field6) || 0;   // Field 6: Amplitudo getaran
+                const rawFrequency = parseFloat(lastData.field7) || 0;     // Field 7: Frekuensi mentah
                 
-                // Update progress bar
-                const vibrationIntensity = Math.min(100, (vibrationValue / 500) * 100);
+                debugLog('Parsed data values:', {
+                    vibrationValue,
+                    repulsionValue,
+                    detectionCount,
+                    activationCount,
+                    probabilityArduino,
+                    amplitudeValue,
+                    rawFrequency
+                });
+
+                // Update frekuensi getaran
+                document.getElementById('last-vibration').textContent = `${vibrationValue.toFixed(2)} Hz`;
+                
+                // Update progress bar berdasarkan probabilitas, bukan frekuensi
+                const vibrationIntensity = Math.min(100, probabilityArduino);
                 document.getElementById('vibration-progress').style.width = `${vibrationIntensity}%`;
+                document.getElementById('vibration-intensity').textContent = amplitudeValue.toFixed(3);
                 
                 // Update frekuensi pengusiran
-                const repulsionValue = parseFloat(lastData.field2) || 0;
                 document.getElementById('last-repulsion').textContent = `${repulsionValue} Hz`;
-                document.getElementById('lra-freq').textContent = `${repulsionValue} Hz`;
+                document.getElementById('lra-freq').textContent = repulsionValue > 0 ? `${repulsionValue}` : '-';
              
-                // Update statistik
-               document.getElementById('detection-today').textContent = lastData.field3 ? Math.round(lastData.field3) : '0';
-                document.getElementById('activation-today').textContent = lastData.field4 || '0';
-                document.getElementById('pest-probability').textContent = lastData.field5 || '0';
-                document.getElementById('vibration-amp').textContent = lastData.field6 ? parseFloat(lastData.field6).toFixed(2) : '0';
+                // Update statistik dengan data yang benar
+                document.getElementById('detection-today').textContent = Math.round(detectionCount);
+                document.getElementById('activation-today').textContent = Math.round(activationCount);
+                document.getElementById('pest-probability').textContent = probabilityArduino.toFixed(1);
+                document.getElementById('vibration-amp').textContent = amplitudeValue.toFixed(3);
                 
-                // Update waktu terakhir
+                // Update waktu terakhir dengan logika yang lebih akurat
                 const lastUpdate = new Date(lastData.created_at);
                 document.getElementById('last-detection').textContent = vibrationValue > 0 ? 
-                    `Getaran terdeteksi pada ${formatTime(lastUpdate)}` : 'Belum ada getaran terdeteksi';
+                    `Getaran terdeteksi pada ${formatTime(lastUpdate)} (${vibrationValue.toFixed(2)} Hz, ${probabilityArduino.toFixed(1)}%)` : 
+                    'Belum ada getaran terdeteksi';
+                    
                 document.getElementById('last-activation').textContent = repulsionValue > 0 ? 
-                    `Terakhir diaktifkan: ${formatTime(lastUpdate)} (Durasi: 10 detik)` : 'Belum pernah diaktifkan';
+                    `Terakhir diaktifkan: ${formatTime(lastUpdate)} (${repulsionValue} Hz, Durasi: 10 detik)` : 
+                    'Belum pernah diaktifkan';
+                    
                 document.getElementById('accel-update').textContent = lastUpdate ? 
-                    'Baru saja' : '-';
+                    formatTime(lastUpdate) : '-';
                 
-                // Update log aktivitas
-                const feeds = await fetchThingSpeakData(FIELD_VIBRATION, 10, date);
-                updateActivityLog(feeds);
+                // Update log aktivitas dengan data yang lebih lengkap
+                await updateActivityLogWithAllData(date);
+                
+                debugLog('Data update completed successfully');
                 
             } catch (error) {
-                showError(`Gagal memperbarui data: ${error.message}`);
+                const errorMsg = `Gagal memperbarui data: ${error.message}`;
+                showError(errorMsg);
+                debugLog('Error in updateData:', error);
             }
         }
 
-        // Fungsi untuk mengupdate tabel log aktivitas
-        function updateActivityLog(feeds) {
-            const tableBody = document.querySelector('#activity-log tbody');
-            
-            if (!feeds || feeds.length === 0) {
+        // Fungsi untuk mengupdate tabel log aktivitas dengan semua data
+        async function updateActivityLogWithAllData(date = null) {
+            try {
+                // Ambil data dari beberapa field sekaligus
+                const [vibrationFeeds, repulsionFeeds, probabilityFeeds, amplitudeFeeds] = await Promise.all([
+                    fetchThingSpeakData(FIELD_MAPPING.VIBRATION_FREQ, 10, date),
+                    fetchThingSpeakData(FIELD_MAPPING.REPULSION_FREQ, 10, date),
+                    fetchThingSpeakData(FIELD_MAPPING.PROBABILITY_ARDUINO, 10, date),
+                    fetchThingSpeakData(FIELD_MAPPING.AMPLITUDE, 10, date)
+                ]);
+                
+                debugLog('Log data fetched:', {
+                    vibrationFeeds: vibrationFeeds.length,
+                    repulsionFeeds: repulsionFeeds.length,
+                    probabilityFeeds: probabilityFeeds.length,
+                    amplitudeFeeds: amplitudeFeeds.length
+                });
+
+                const tableBody = document.querySelector('#activity-log tbody');
+                
+                if (!vibrationFeeds || vibrationFeeds.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Tidak ada data yang tersedia</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tableBody.innerHTML = '';
+                
+                // Ambil 5 data terbaru dan gabungkan berdasarkan timestamp
+                const recentFeeds = vibrationFeeds.slice(-5).reverse();
+                
+                recentFeeds.forEach(vibrationFeed => {
+                    const timestamp = vibrationFeed.created_at;
+                    
+                    // Cari data yang sesuai berdasarkan timestamp
+                    const repulsionFeed = repulsionFeeds.find(f => f.created_at === timestamp);
+                    const probabilityFeed = probabilityFeeds.find(f => f.created_at === timestamp);
+                    const amplitudeFeed = amplitudeFeeds.find(f => f.created_at === timestamp);
+                    
+                    const row = document.createElement('tr');
+                    const time = new Date(timestamp);
+                    
+                    // Tambahkan highlight jika data terbaru
+                    if (recentFeeds.indexOf(vibrationFeed) === 0) {
+                        row.className = 'table-warning';
+                    }
+                    
+                    const vibrationValue = parseFloat(vibrationFeed.field1) || 0;
+                    const repulsionValue = repulsionFeed ? (parseFloat(repulsionFeed.field2) || 0) : 0;
+                    const probabilityValue = probabilityFeed ? (parseFloat(probabilityFeed.field5) || 0) : 0;
+                    const amplitudeValue = amplitudeFeed ? (parseFloat(amplitudeFeed.field6) || 0) : 0;
+                    
+                    row.innerHTML = `
+                        <td>
+                            ${formatTime(time)}<br>
+                            <small class="text-muted">${formatDate(time)}</small>
+                        </td>
+                        <td>
+                            <strong>${vibrationValue.toFixed(2)}</strong>
+                            ${vibrationValue > 0 ? '<span class="badge bg-success ms-1">Aktif</span>' : ''}
+                        </td>
+                        <td>
+                            <strong>${repulsionValue > 0 ? repulsionValue.toFixed(2) : '-'}</strong>
+                            ${repulsionValue > 0 ? '<span class="badge bg-danger ms-1">Aktif</span>' : ''}
+                        </td>
+                        <td>
+                            <strong>${probabilityValue.toFixed(1)}%</strong>
+                            ${probabilityValue > 50 ? '<span class="badge bg-warning ms-1">Tinggi</span>' : ''}
+                        </td>
+                        <td>${amplitudeValue.toFixed(3)}</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                debugLog('Activity log updated successfully');
+                
+            } catch (error) {
+                debugLog('Error updating activity log:', error);
+                const tableBody = document.querySelector('#activity-log tbody');
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="text-center text-muted">Tidak ada data yang tersedia</td>
+                        <td colspan="5" class="text-center text-danger">Error memuat log aktivitas</td>
                     </tr>
                 `;
-                return;
             }
-            
-            tableBody.innerHTML = '';
-            
-            // Ambil 5 data terbaru
-            const recentFeeds = feeds.slice(-5).reverse();
-            
-            recentFeeds.forEach(feed => {
-                const row = document.createElement('tr');
-                const time = new Date(feed.created_at);
-                
-                row.innerHTML = `
-                    <td>${formatTime(time)}<br><small>${formatDate(time)}</small></td>
-                    <td>${feed.field1 || '-'}</td>
-                    <td>${feed.field2 || '-'}</td>
-                    <td>${feed.field5 ? feed.field5 + '%' : '-'}</td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
         }
 
         // Fungsi untuk memuat data berdasarkan tanggal yang dipilih
@@ -684,26 +869,70 @@
             const today = new Date();
             const isToday = formatDateToInput(selectedDate) === formatDateToInput(today);
             
+            debugLog('Loading data for selected date:', { selectedDate, isToday });
+            
             // Update charts
             loadChartsByDate(selectedDate);
             
             // Update data utama
             await updateData(isToday ? null : selectedDate);
             
-            // Update statistik
+            // Update statistik khusus untuk tanggal yang dipilih
             if (!isToday) {
-                // Untuk tanggal sebelumnya, hitung total deteksi dan aktivasi
-                const feeds = await fetchThingSpeakData(FIELD_VIBRATION, 1000, selectedDate);
-                const detections = feeds.filter(feed => parseFloat(feed.field1) > 0).length;
-                const activations = feeds.filter(feed => parseFloat(feed.field2) > 0).length;
-                
-                document.getElementById('detection-today').textContent = detections;
-                document.getElementById('activation-today').textContent = activations;
+                await updateHistoricalStatistics(selectedDate);
             }
+        }
+
+        // Fungsi untuk update statistik historical
+        async function updateHistoricalStatistics(date) {
+            try {
+                debugLog('Updating historical statistics for:', date);
+                
+                // Ambil semua data untuk tanggal yang dipilih
+                const [detectionFeeds, activationFeeds, probabilityFeeds] = await Promise.all([
+                    fetchThingSpeakData(FIELD_MAPPING.DETECTION_COUNT, 1000, date),
+                    fetchThingSpeakData(FIELD_MAPPING.ACTIVATION_COUNT, 1000, date),
+                    fetchThingSpeakData(FIELD_MAPPING.PROBABILITY_ARDUINO, 1000, date)
+                ]);
+                
+                // Hitung statistik
+                const totalDetections = detectionFeeds.length;
+                const totalActivations = activationFeeds.filter(feed => parseFloat(feed.field4) > 0).length;
+                const avgProbability = probabilityFeeds.length > 0 ? 
+                    probabilityFeeds.reduce((sum, feed) => sum + (parseFloat(feed.field5) || 0), 0) / probabilityFeeds.length : 0;
+                
+                document.getElementById('detection-today').textContent = totalDetections;
+                document.getElementById('activation-today').textContent = totalActivations;
+                
+                debugLog('Historical statistics updated:', {
+                    totalDetections,
+                    totalActivations,
+                    avgProbability
+                });
+                
+            } catch (error) {
+                debugLog('Error updating historical statistics:', error);
+            }
+        }
+
+        // Fungsi untuk auto-refresh iframe
+        function setupChartAutoRefresh() {
+            setInterval(() => {
+                const dateSelector = document.getElementById('date-selector');
+                const selectedDate = new Date(dateSelector.value);
+                const today = new Date();
+                
+                // Hanya refresh jika yang ditampilkan adalah data hari ini
+                if (formatDateToInput(selectedDate) === formatDateToInput(today)) {
+                    loadChartsByDate(selectedDate);
+                }
+            }, UPDATE_INTERVAL);
         }
 
         // Inisialisasi saat DOM siap
         document.addEventListener('DOMContentLoaded', function() {
+            debugLog('DOM loaded, initializing PalmGuard dashboard...');
+            
             // Set default ke hari ini
             const today = new Date();
             document.getElementById('date-selector').value = formatDateToInput(today);
@@ -715,6 +944,7 @@
             // Event listener untuk date picker
             document.getElementById('date-selector').addEventListener('change', function() {
                 const selectedDate = new Date(this.value);
+                debugLog('Date changed:', selectedDate);
                 loadDataForSelectedDate(selectedDate);
             });
             
@@ -725,18 +955,41 @@
             updateData();
             
             // Set interval untuk update data (30 detik sesuai Arduino)
-            setInterval(updateData, UPDATE_INTERVAL);
+            setInterval(() => {
+                const dateSelector = document.getElementById('date-selector');
+                const selectedDate = new Date(dateSelector.value);
+                const today = new Date();
+                
+                // Hanya update data real-time untuk hari ini
+                if (formatDateToInput(selectedDate) === formatDateToInput(today)) {
+                    updateData();
+                }
+            }, UPDATE_INTERVAL);
             
             // Tambahkan penanganan error untuk iframe ThingSpeak
             const iframes = document.querySelectorAll('.thingspeak-container iframe');
             iframes.forEach(iframe => {
                 iframe.addEventListener('error', function() {
+                    debugLog('Chart loading error:', this.src);
                     const placeholder = document.createElement('div');
                     placeholder.className = 'loading-placeholder';
                     placeholder.textContent = 'Gagal memuat grafik: ' + this.parentNode.querySelector('.chart-title').textContent;
                     this.parentNode.replaceChild(placeholder, this);
                 });
             });
+            
+            // Debug toggle button
+            let debugToggle = false;
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    debugToggle = !debugToggle;
+                    const debugAlert = document.getElementById('debug-alert');
+                    debugAlert.style.display = debugToggle ? 'block' : 'none';
+                    debugLog('Debug mode toggled:', debugToggle);
+                }
+            });
+            
+            debugLog('PalmGuard dashboard initialized successfully');
         });
     </script>
 </body>
