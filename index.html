@@ -226,10 +226,6 @@
                             <strong id="arduino-probability">-</strong>%
                         </div>
                         <div class="mb-2">
-                            <small class="text-muted">Probabilitas FFT:</small>
-                            <strong id="fft-probability">-</strong>%
-                        </div>
-                        <div class="mb-2">
                             <small class="text-muted">Status Sinkronisasi:</small>
                             <span class="badge bg-secondary" id="sync-status">Checking...</span>
                         </div>
@@ -388,7 +384,6 @@
         // Data untuk konsistensi check
         let dataConsistency = {
             arduinoProbability: 0,
-            fftProbability: 0,
             lastSync: null
         };
 
@@ -732,8 +727,13 @@
         // Fungsi untuk mengupdate tabel log aktivitas dengan semua data dan fitur "Show More"
         async function updateActivityLogWithAllData(date = null) {
             try {
-                // Ambil data dari field vibration (field1) sebagai referensi utama
-                const vibrationFeeds = await fetchThingSpeakData(FIELD_MAPPING.VIBRATION_FREQ, 50, date);
+                // Ambil data dari semua field yang diperlukan untuk log
+                const [vibrationFeeds, repulsionFeeds, probabilityFeeds, amplitudeFeeds] = await Promise.all([
+                    fetchThingSpeakData(FIELD_MAPPING.VIBRATION_FREQ, 50, date),
+                    fetchThingSpeakData(FIELD_MAPPING.REPULSION_FREQ, 50, date),
+                    fetchThingSpeakData(FIELD_MAPPING.PROBABILITY_ARDUINO, 50, date),
+                    fetchThingSpeakData(FIELD_MAPPING.AMPLITUDE, 50, date)
+                ]);
                 
                 const tableBody = document.querySelector('#activity-log tbody');
                 const showMoreSection = document.getElementById('show-more-section');
@@ -748,8 +748,26 @@
                     return;
                 }
                 
+                // Gabungkan semua data berdasarkan timestamp
+                const combinedData = vibrationFeeds.map(vibrationFeed => {
+                    const timestamp = vibrationFeed.created_at;
+                    
+                    // Cari data yang sesuai di field lainnya berdasarkan timestamp
+                    const repulsionData = repulsionFeeds.find(feed => feed.created_at === timestamp);
+                    const probabilityData = probabilityFeeds.find(feed => feed.created_at === timestamp);
+                    const amplitudeData = amplitudeFeeds.find(feed => feed.created_at === timestamp);
+                    
+                    return {
+                        timestamp: timestamp,
+                        vibration: parseFloat(vibrationFeed.field1) || 0,
+                        repulsion: repulsionData ? (parseFloat(repulsionData.field2) || 0) : 0,
+                        probability: probabilityData ? (parseFloat(probabilityData.field5) || 0) : 0,
+                        amplitude: amplitudeData ? (parseFloat(amplitudeData.field6) || 0) : 0
+                    };
+                });
+                
                 // Simpan semua data ke variabel global
-                allLogData = vibrationFeeds.slice().reverse();
+                allLogData = combinedData.slice().reverse();
                 
                 // Reset tampilan
                 showingMore = false;
@@ -789,21 +807,14 @@
                 return;
             }
             
-            dataToShow.forEach((vibrationFeed, index) => {
-                const timestamp = vibrationFeed.created_at;
-                
+            dataToShow.forEach((logData, index) => {
                 const row = document.createElement('tr');
-                const time = new Date(timestamp);
+                const time = new Date(logData.timestamp);
                 
                 // Tambahkan highlight jika data terbaru
                 if (index === 0) {
                     row.className = 'table-warning';
                 }
-                
-                const vibrationValue = parseFloat(vibrationFeed.field1) || 0;
-                const repulsionValue = vibrationFeed.field2 ? (parseFloat(vibrationFeed.field2) || 0) : 0;
-                const probabilityValue = vibrationFeed.field5 ? (parseFloat(vibrationFeed.field5) || 0) : 0;
-                const amplitudeValue = vibrationFeed.field6 ? (parseFloat(vibrationFeed.field6) || 0) : 0;
                 
                 row.innerHTML = `
                     <td>
@@ -811,18 +822,18 @@
                         <small class="text-muted">${formatDate(time)}</small>
                     </td>
                     <td>
-                        <strong>${vibrationValue.toFixed(2)}</strong>
-                        ${vibrationValue > 0 ? '<span class="badge bg-success ms-1">Aktif</span>' : ''}
+                        <strong>${logData.vibration.toFixed(2)}</strong>
+                        ${logData.vibration > 0 ? '<span class="badge bg-success ms-1">Aktif</span>' : ''}
                     </td>
                     <td>
-                        <strong>${repulsionValue > 0 ? repulsionValue.toFixed(2) : '-'}</strong>
-                        ${repulsionValue > 0 ? '<span class="badge bg-danger ms-1">Aktif</span>' : ''}
+                        <strong>${logData.repulsion > 0 ? logData.repulsion.toFixed(2) : '-'}</strong>
+                        ${logData.repulsion > 0 ? '<span class="badge bg-danger ms-1">Aktif</span>' : ''}
                     </td>
                     <td>
-                        <strong>${probabilityValue.toFixed(1)}%</strong>
-                        ${probabilityValue > 50 ? '<span class="badge bg-warning ms-1">Tinggi</span>' : ''}
+                        <strong>${logData.probability.toFixed(1)}%</strong>
+                        ${logData.probability > 50 ? '<span class="badge bg-warning ms-1">Tinggi</span>' : ''}
                     </td>
-                    <td>${amplitudeValue.toFixed(3)}</td>
+                    <td>${logData.amplitude.toFixed(3)}</td>
                 `;
                 
                 tableBody.appendChild(row);
