@@ -3,836 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PalmGuard - Monitoring System</title>
+    <title>PalmGuard - Pengujian Delay ThingSpeak</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
         }
-        .navbar-brand {
-            font-size: 1.5rem;
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
         }
-        .experiment-info {
-            background-color: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .card {
+        .delay-card {
             border: none;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
-        .card-header {
-            border-radius: 10px 10px 0 0 !important;
-        }
-        .thingspeak-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .thingspeak-chart {
-            flex: 1;
-            min-width: 300px;
-        }
-        .chart-title {
+        .delay-value {
+            font-size: 2.5rem;
             font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
+            text-align: center;
+            padding: 20px;
         }
-        .sensor-card {
-            height: 100%;
-        }
-        .progress {
-            height: 10px;
-        }
-        footer {
-            padding: 15px 0;
-            margin-top: 30px;
-        }
-        
-        /* New styles for additional features */
-        .real-time-indicator {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        .date-selector-container {
-            width: 180px;
-        }
-        .loading-placeholder {
-            height: 260px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            border: 1px dashed #dee2e6;
-            color: #6c757d;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        .blink {
-            animation: blink 1s infinite;
+        .delay-good {
             color: #28a745;
+            background-color: #d4edda;
+            border-left: 5px solid #28a745;
         }
-        .badge {
-            font-weight: 500;
-            padding: 5px 8px;
+        .delay-warning {
+            color: #ffc107;
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
         }
-        .btn-show-more {
-            background: linear-gradient(45deg, #6c757d, #5a6268);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            transition: all 0.3s ease;
+        .delay-danger {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
         }
-        .btn-show-more:hover {
-            background: linear-gradient(45deg, #5a6268, #495057);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        .timestamp {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #6c757d;
         }
-        .log-row-hidden {
-            display: none;
-        }
-        .log-loading {
+        .table th {
             background-color: #f8f9fa;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar with responsive toggle -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top"> 
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <span class="fw-bold">PalmGuard</span>
-            </a>
-            <div class="d-flex">
-                <span class="text-white me-2 align-self-center">Peneliti</span>
-                <button class="btn btn-outline-light btn-sm">Logout</button>
-            </div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="bi bi-speedometer2"></i> PalmGuard</h1>
+            <h2>Pengujian Delay ThingSpeak → Website</h2>
+            <p class="mb-0">Mengukur waktu yang dibutuhkan data dari ThingSpeak sampai ditampilkan di website</p>
         </div>
-    </nav>
 
-    <div class="container-fluid mt-3">
         <div class="row">
-            <!-- Left Column -->
-            <div class="col-lg-4 col-md-12">
-                <div class="experiment-info">
-                    <h5 class="mb-3">Informasi Percobaan</h5>
-                    <div class="mb-2">
-                        <strong>Lokasi:</strong> 1 Pohon Kelapa Sawit
-                    </div>
-                    <div class="mb-2">
-                        <strong>Daun:</strong> 1 Helai
-                    </div>
-                    <div class="mb-2">
-                        <strong>Jenis Hama:</strong> Ulat Api (Setothosea asigna)
-                    </div>
-                    <div>
-                        <strong>Mode:</strong> Deteksi & Pengusiran Otomatis
-                    </div>
-                </div>
-
-                <div class="card mb-4">
+            <div class="col-md-6">
+                <!-- Kartu Delay Saat Ini -->
+                <div class="card delay-card">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">Statistik Percobaan</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> Delay Saat Ini</h5>
                     </div>
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Deteksi Hama Hari Ini</span>
-                            <span class="badge bg-primary"><span id="detection-today">0</span></span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Aktivasi Pengusir</span>
-                            <span class="badge bg-danger"><span id="activation-today">0</span></span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Probabilitas Hama (Arduino)</span>
-                            <span class="badge bg-info"><span id="pest-probability">0</span>%</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span>Amplitudo Getaran</span>
-                            <span class="badge bg-success"><span id="vibration-amp">0</span>g</span>
+                        <div class="delay-value" id="current-delay">-</div>
+                        <div class="text-center">
+                            <small class="timestamp" id="last-update">Terakhir update: -</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Data Consistency Check -->
-                <div class="card mb-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="card-title mb-0">Konsistensi Data</h5>
+                <!-- Informasi Koneksi -->
+                <div class="card delay-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-wifi"></i> Status Koneksi</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-2">
-                            <small class="text-muted">Probabilitas Arduino:</small>
-                            <strong id="arduino-probability">-</strong>%
+                            <strong>Channel ID:</strong> <span id="channel-id-display">3007423</span>
                         </div>
                         <div class="mb-2">
-                            <small class="text-muted">Status Sinkronisasi:</small>
-                            <span class="badge bg-secondary" id="sync-status">Checking...</span>
+                            <strong>Status:</strong> <span id="connection-status" class="badge bg-secondary">Menghubungkan...</span>
                         </div>
+                        <div class="mb-2">
+                            <strong>Interval Cek:</strong> 5 detik
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="cekDelay()">
+                            <i class="bi bi-arrow-clockwise"></i> Cek Sekarang
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column -->
-            <div class="col-lg-8 col-md-12">
-                <div class="card mb-4">
-                    <div class="card-header bg-success text-white position-relative">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Data Real-time</h5>
-                            <div class="date-selector-container">
-                                <input type="date" id="date-selector" class="form-control form-control-sm">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="thingspeak-container">
-                            <div class="thingspeak-chart position-relative">
-                                <div class="chart-title" id="chart-title-1">Frekuensi Getaran Hama (Hz)</div>
-                                <iframe width="100%" height="260" style="border: 1px solid #ccc;"
-                                    src="https://thingspeak.com/channels/3007423/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&title=Frekuensi+Getaran&yaxis=Hz&days=1">
-                                </iframe>
-                            </div>
-                            <div class="thingspeak-chart position-relative">
-                                <div class="chart-title" id="chart-title-2">Probabilitas Deteksi Hama (%)</div>
-                                <iframe width="100%" height="260" style="border: 1px solid #ccc;"
-                                    src="https://thingspeak.com/channels/3007423/charts/5?bgcolor=%23ffffff&color=%233366ff&dynamic=true&results=60&type=line&title=Probabilitas+Hama&yaxis=%25&days=1">
-                                </iframe>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 col-sm-12">
-                        <div class="card sensor-card">
-                            <div class="card-header bg-warning text-dark">
-                                <h5 class="card-title mb-0">Deteksi Getaran</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="text-center mb-3">
-                                    <div class="display-4" id="last-vibration">0 Hz</div>
-                                    <small class="text-muted">Frekuensi Getaran Hama Terakhir</small>
-                                </div>
-                                <div class="progress mb-2">
-                                    <div class="progress-bar bg-warning" id="vibration-progress" role="progressbar" style="width: 0%"></div>
-                                </div>
-                                <small class="text-muted">Amplitudo: <span id="vibration-intensity">0</span>g</small>
-                                <hr>
-                                <div class="alert alert-info">
-                                    <small id="last-detection">Belum ada data terdeteksi</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-sm-12">
-                        <div class="card sensor-card">
-                            <div class="card-header bg-danger text-white">
-                                <h5 class="card-title mb-0">Sistem Pengusiran</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="text-center mb-3">
-                                    <div class="display-4" id="last-repulsion">0 Hz</div>
-                                    <small class="text-muted">Frekuensi Pengusiran Terakhir</small>
-                                </div>
-            
-                                <div class="alert alert-secondary">
-                                    <small id="last-activation">Belum pernah diaktifkan</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card mt-4">
-                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Log Aktivitas Terkini</h5>
-                        <small class="text-white-50" id="log-subtitle">5 data terbaru</small>
+            <div class="col-md-6">
+                <!-- Tabel Hasil Pengujian -->
+                <div class="card delay-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-table"></i> Tabel 4.2 - Delay ThingSpeak → Website</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="activity-log">
+                            <table class="table table-hover mb-0" id="delay-table">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Waktu</th>
-                                        <th>Frekuensi Getaran (Hz)</th>
-                                        <th>Frekuensi Pengusiran (Hz)</th>
-                                        <th>Probabilitas Hama (%)</th>
-                                        <th>Amplitudo (g)</th>
+                                        <th>#</th>
+                                        <th>Waktu ThingSpeak</th>
+                                        <th>Waktu Website</th>
+                                        <th>Delay (s)</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">Memuat data...</td>
+                                        <td colspan="5" class="text-center text-muted">Menunggu data...</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div class="text-center p-3 border-top bg-light" id="show-more-section" style="display: none;">
-                            <button class="btn btn-show-more" id="show-more-btn">
-                                <i class="bi bi-chevron-down me-1"></i>
-                                Tampilkan Selengkapnya
-                            </button>
+                    </div>
+                </div>
+
+                <!-- Statistik -->
+                <div class="card delay-card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Statistik</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <div class="h4" id="avg-delay">0.00</div>
+                                    <small>Rata-rata</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <div class="h4" id="max-delay">0.00</div>
+                                    <small>Maksimum</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <div class="h4" id="min-delay">0.00</div>
+                                    <small>Minimum</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2">
+                                    <div class="h4" id="test-count">0</div>
+                                    <small>Jumlah Tes</small>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informasi Sistem -->
+        <div class="card mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Informasi Sistem</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Platform:</strong> ESP32 (Arduino IDE)<br>
+                        <strong>Sensor Utama:</strong> Mikrofon (deteksi suara hama)<br>
+                        <strong>Sensor Sekunder:</strong> MPU6050 Accelerometer<br>
+                        <strong>Aktuator:</strong> Linear Resonant Actuator (LRA)
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Threshold Aktivasi:</strong> ≥70% probabilitas hama<br>
+                        <strong>Interval ThingSpeak:</strong> 20 detik<br>
+                        <strong>Durasi LRA:</strong> 10 detik<br>
+                        <strong>Channel ID:</strong> 3007423
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="bg-light">
-        <div class="container text-center">
-            <p class="mb-0 text-muted">© 2025 PalmGuard - SMA Negeri 10 Samarinda</p>
-            <small class="text-muted">Sistem Deteksi & Pengusir Hama Daun Kelapa Sawit Berbasis IoT</small>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script>
-        // Konfigurasi Thingspeak
+        // Konfigurasi
         const CHANNEL_ID = '3007423';
-        const READ_API_KEY = '9UL5HWSOQSMGJ2RH';
-        const UPDATE_INTERVAL = 30000; // 30 detik
+        const API_KEY = '9UL5HWSOQSMGJ2RH';
+        let testResults = [];
+        let testCount = 0;
 
-        // Field mapping berdasarkan flowchart
-        const FIELD_MAPPING = {
-            VIBRATION_FREQ: 1,      // Frekuensi getaran dari FFT
-            REPULSION_FREQ: 2,      // Frekuensi pengusiran LRA
-            DETECTION_COUNT: 3,     // Jumlah deteksi (dari Arduino)
-            ACTIVATION_COUNT: 4,    // Jumlah aktivasi pengusir
-            PROBABILITY_ARDUINO: 5, // Probabilitas dari Arduino (hasil fuzzy logic)
-            AMPLITUDE: 6,           // Amplitudo getaran
-            RAW_FREQUENCY: 7        // Frekuensi mentah (sebelum FFT)
-        };
+        // Elemen DOM
+        const currentDelayElement = document.getElementById('current-delay');
+        const lastUpdateElement = document.getElementById('last-update');
+        const connectionStatusElement = document.getElementById('connection-status');
+        const delayTableBody = document.querySelector('#delay-table tbody');
+        const avgDelayElement = document.getElementById('avg-delay');
+        const maxDelayElement = document.getElementById('max-delay');
+        const minDelayElement = document.getElementById('min-delay');
+        const testCountElement = document.getElementById('test-count');
 
-        // Data untuk konsistensi check
-        let dataConsistency = {
-            arduinoProbability: 0,
-            lastSync: null
-        };
+        // Fungsi utama untuk cek delay
+        async function cekDelay() {
+            try {
+                connectionStatusElement.className = 'badge bg-warning';
+                connectionStatusElement.textContent = 'Memeriksa...';
 
-        // Variables untuk log aktivitas
-        let allLogData = [];
-        let showingMore = false;
-        const INITIAL_LOG_COUNT = 5;
+                // Catat waktu sebelum request
+                const waktuWebsiteSebelum = Date.now();
+                
+                // Lakukan request ke ThingSpeak
+                let res = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json?api_key=${API_KEY}`);
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
 
-        // Fungsi untuk memformat waktu
-        function formatTime(date) {
-            if (!date) return '-';
-            return date.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            }) + ' WIB';
+                let data = await res.json();
+                
+                // Waktu setelah mendapatkan response
+                const waktuWebsiteSesudah = Date.now();
+                
+                // Waktu dari ThingSpeak
+                const waktuThingSpeak = new Date(data.created_at).getTime();
+                
+                // Hitung delay (rata-rata waktu sebelum dan sesudah request)
+                const waktuWebsiteRataRata = (waktuWebsiteSebelum + waktuWebsiteSesudah) / 2;
+                const delay = (waktuWebsiteRataRata - waktuThingSpeak) / 1000; // dalam detik
+
+                // Simpan hasil pengujian
+                testCount++;
+                const testResult = {
+                    id: testCount,
+                    waktuThingSpeak: new Date(waktuThingSpeak),
+                    waktuWebsite: new Date(waktuWebsiteRataRata),
+                    delay: delay,
+                    field5: data.field5 || 'N/A'
+                };
+                
+                testResults.push(testResult);
+                
+                // Update tampilan
+                updateDelayDisplay(delay);
+                addTestResultToTable(testResult);
+                updateStatistics();
+                
+                // Update status
+                connectionStatusElement.className = 'badge bg-success';
+                connectionStatusElement.textContent = 'Terhubung';
+                
+                console.log("Delay ThingSpeak → Website: " + delay.toFixed(2) + " detik");
+
+            } catch (error) {
+                console.error("Gagal mengukur delay:", error);
+                connectionStatusElement.className = 'badge bg-danger';
+                connectionStatusElement.textContent = 'Error';
+                currentDelayElement.textContent = 'Error';
+                currentDelayElement.className = 'delay-value delay-danger';
+            }
         }
 
-        // Fungsi untuk memformat tanggal
-        function formatDate(date) {
-            if (!date) return '-';
-            return date.toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-        }
-
-        // Fungsi untuk memformat tanggal ke format YYYY-MM-DD
-        function formatDateToInput(date) {
-            const d = new Date(date);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        // Fungsi untuk menampilkan pesan error
-        function showError(message) {
-            console.error(message);
+        // Fungsi untuk update tampilan delay
+        function updateDelayDisplay(delay) {
+            currentDelayElement.textContent = delay.toFixed(2) + 's';
             
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-            errorDiv.innerHTML = `
-                <strong>Error!</strong> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            // Update warna berdasarkan nilai delay
+            if (delay < 3) {
+                currentDelayElement.className = 'delay-value delay-good';
+            } else if (delay < 6) {
+                currentDelayElement.className = 'delay-value delay-warning';
+            } else {
+                currentDelayElement.className = 'delay-value delay-danger';
+            }
+            
+            // Update waktu terakhir
+            lastUpdateElement.textContent = 'Terakhir update: ' + new Date().toLocaleTimeString();
+        }
+
+        // Fungsi untuk menambahkan hasil ke tabel
+        function addTestResultToTable(result) {
+            // Hapus placeholder jika ada
+            if (delayTableBody.querySelector('td[colspan]')) {
+                delayTableBody.innerHTML = '';
+            }
+            
+            const row = document.createElement('tr');
+            
+            // Tentukan kelas berdasarkan nilai delay
+            if (result.delay < 3) {
+                row.className = 'table-success';
+            } else if (result.delay < 6) {
+                row.className = 'table-warning';
+            } else {
+                row.className = 'table-danger';
+            }
+            
+            row.innerHTML = `
+                <td>${result.id}</td>
+                <td class="timestamp">${result.waktuThingSpeak.toLocaleTimeString()}</td>
+                <td class="timestamp">${result.waktuWebsite.toLocaleTimeString()}</td>
+                <td><strong>${result.delay.toFixed(2)}</strong></td>
+                <td>${result.delay < 3 ? 'Baik' : result.delay < 6 ? 'Sedang' : 'Buruk'}</td>
             `;
             
-            const container = document.querySelector('.container-fluid');
-            container.insertBefore(errorDiv, container.firstChild);
-            
-            setTimeout(() => {
-                errorDiv.remove();
-            }, 5000);
+            delayTableBody.appendChild(row);
         }
 
-        // Fungsi untuk mengambil data dari Thingspeak dengan error handling yang lebih baik
-        async function fetchThingSpeakData(field, results = 10, date = null) {
-            try {
-                let apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/${field}.json?results=${results}`;
-                
-                if (date) {
-                    const nextDay = new Date(date);
-                    nextDay.setDate(nextDay.getDate() + 1);
-                    
-                    apiUrl += `&start=${formatDateToInput(date)}&end=${formatDateToInput(nextDay)}`;
-                }
-                
-                if (READ_API_KEY) {
-                    apiUrl += `&api_key=${READ_API_KEY}`;
-                }
-                
-                const response = await fetch(apiUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                return data.feeds || [];
-            } catch (error) {
-                const errorMsg = `Gagal mengambil data field ${field}: ${error.message}`;
-                showError(errorMsg);
-                return [];
-            }
+        // Fungsi untuk update statistik
+        function updateStatistics() {
+            if (testResults.length === 0) return;
+            
+            const delays = testResults.map(result => result.delay);
+            const avgDelay = delays.reduce((sum, delay) => sum + delay, 0) / delays.length;
+            const maxDelay = Math.max(...delays);
+            const minDelay = Math.min(...delays);
+            
+            avgDelayElement.textContent = avgDelay.toFixed(2);
+            maxDelayElement.textContent = maxDelay.toFixed(2);
+            minDelayElement.textContent = minDelay.toFixed(2);
+            testCountElement.textContent = testResults.length;
         }
 
-        // Fungsi untuk mengambil data terakhir dari semua field
-        async function fetchLastData(date = null) {
-            try {
-                let apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json`;
-                
-                if (date) {
-                    const nextDay = new Date(date);
-                    nextDay.setDate(nextDay.getDate() + 1);
-                    
-                    apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?start=${formatDateToInput(date)}&end=${formatDateToInput(nextDay)}&results=1`;
-                }
-                
-                if (READ_API_KEY) {
-                    apiUrl += date ? `&api_key=${READ_API_KEY}` : `?api_key=${READ_API_KEY}`;
-                }
-                
-                const response = await fetch(apiUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (date) {
-                    return data.feeds && data.feeds.length > 0 ? data.feeds[0] : null;
-                }
-                
-                return data;
-            } catch (error) {
-                const errorMsg = `Gagal mengambil data terakhir: ${error.message}`;
-                showError(errorMsg);
-                return null;
-            }
-        }
+        // Jalankan pertama kali
+        cekDelay();
 
-        // Fungsi untuk memuat grafik berdasarkan tanggal
-        function loadChartsByDate(date) {
-            const dateStr = formatDateToInput(date);
-            const today = new Date();
-            const isToday = dateStr === formatDateToInput(today);
-            
-            const iframes = document.querySelectorAll('.thingspeak-container iframe');
-            
-            iframes.forEach(iframe => {
-                try {
-                    const url = new URL(iframe.src);
-                    
-                    if (isToday) {
-                        // Gunakan days=1 untuk tampilan default hari ini
-                        url.searchParams.set('days', '1');
-                        url.searchParams.delete('start');
-                        url.searchParams.delete('end');
-                    } else {
-                        // Untuk tanggal spesifik, gunakan start dan end date
-                        url.searchParams.delete('days');
-                        url.searchParams.set('start', dateStr);
-                        url.searchParams.set('end', dateStr);
-                    }
-                    
-                    // Force refresh dengan menambahkan timestamp
-                    url.searchParams.set('_', new Date().getTime());
-                    
-                    iframe.src = url.toString();
-                    
-                    // Update judul chart berdasarkan tanggal
-                    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                    const formattedDate = date.toLocaleDateString('id-ID', dateOptions);
-                    
-                    document.getElementById('chart-title-1').textContent = `Frekuensi Getaran Hama (${isToday ? 'Hari Ini' : formattedDate})`;
-                    document.getElementById('chart-title-2').textContent = `Probabilitas Deteksi Hama (${isToday ? 'Hari Ini' : formattedDate})`;
-                    
-                } catch (error) {
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'loading-placeholder';
-                    placeholder.textContent = 'Gagal memuat grafik';
-                    iframe.parentNode.replaceChild(placeholder, iframe);
-                }
-            });
-        }
-
-        // Fungsi untuk cek konsistensi data
-        function checkDataConsistency(data) {
-            if (!data) return;
-
-            // Ambil probabilitas dari Arduino (field5)
-            const arduinoProbability = parseFloat(data.field5) || 0;
-            
-            // Update data consistency
-            dataConsistency.arduinoProbability = arduinoProbability;
-            dataConsistency.lastSync = new Date();
-
-            // Update tampilan
-            document.getElementById('arduino-probability').textContent = arduinoProbability.toFixed(1);
-            
-            // Status sinkronisasi
-            const syncStatus = document.getElementById('sync-status');
-            if (arduinoProbability > 0) {
-                syncStatus.className = 'badge bg-success';
-                syncStatus.textContent = 'Tersinkron';
-            } else {
-                syncStatus.className = 'badge bg-warning';
-                syncStatus.textContent = 'Menunggu Data';
-            }
-        }
-
-        // Fungsi untuk mengupdate data utama
-        async function updateData(date = null) {
-            try {
-                // Ambil data terakhir dari semua field
-                const lastData = await fetchLastData(date);
-                
-                // Cek konsistensi data
-                checkDataConsistency(lastData);
-                
-                if (!lastData) {
-                    return;
-                }
-                
-                const now = new Date();
-                
-                // Update data berdasarkan field mapping yang benar
-                const vibrationValue = parseFloat(lastData.field1) || 0; // Field 1: Frekuensi getaran dari FFT
-                const repulsionValue = parseFloat(lastData.field2) || 0;  // Field 2: Frekuensi pengusiran LRA
-                const detectionCount = parseFloat(lastData.field3) || 0;  // Field 3: Jumlah deteksi
-                const activationCount = parseFloat(lastData.field4) || 0; // Field 4: Jumlah aktivasi
-                const probabilityArduino = parseFloat(lastData.field5) || 0; // Field 5: Probabilitas dari Arduino
-                const amplitudeValue = parseFloat(lastData.field6) || 0;   // Field 6: Amplitudo getaran
-                const rawFrequency = parseFloat(lastData.field7) || 0;     // Field 7: Frekuensi mentah
-
-                // Update frekuensi getaran
-                document.getElementById('last-vibration').textContent = `${vibrationValue.toFixed(2)} Hz`;
-                
-                // Update progress bar berdasarkan probabilitas, bukan frekuensi
-                const vibrationIntensity = Math.min(100, probabilityArduino);
-                document.getElementById('vibration-progress').style.width = `${vibrationIntensity}%`;
-                document.getElementById('vibration-intensity').textContent = amplitudeValue.toFixed(3);
-                
-                // Update frekuensi pengusiran
-                document.getElementById('last-repulsion').textContent = `${repulsionValue} Hz`;
-                
-                // Update statistik dengan data yang benar
-                document.getElementById('detection-today').textContent = Math.round(detectionCount);
-                document.getElementById('activation-today').textContent = Math.round(activationCount);
-                document.getElementById('pest-probability').textContent = probabilityArduino.toFixed(1);
-                document.getElementById('vibration-amp').textContent = amplitudeValue.toFixed(3);
-                
-                // Update waktu terakhir dengan logika yang lebih akurat
-                const lastUpdate = new Date(lastData.created_at);
-                document.getElementById('last-detection').textContent = vibrationValue > 0 ? 
-                    `Getaran terdeteksi pada ${formatTime(lastUpdate)} (${vibrationValue.toFixed(2)} Hz, ${probabilityArduino.toFixed(1)}%)` : 
-                    'Belum ada getaran terdeteksi';
-                    
-                document.getElementById('last-activation').textContent = repulsionValue > 0 ? 
-                    `Terakhir diaktifkan: ${formatTime(lastUpdate)} (${repulsionValue} Hz, Durasi: 10 detik)` : 
-                    'Belum pernah diaktifkan';
-                
-                // Update log aktivitas dengan data yang lebih lengkap
-                await updateActivityLogWithAllData(date);
-                
-            } catch (error) {
-                const errorMsg = `Gagal memperbarui data: ${error.message}`;
-                showError(errorMsg);
-            }
-        }
-
-        // Fungsi untuk mengupdate tabel log aktivitas dengan semua data dan fitur "Show More"
-        async function updateActivityLogWithAllData(date = null) {
-            try {
-                // Ambil data dari semua field yang diperlukan untuk log
-                const [vibrationFeeds, repulsionFeeds, probabilityFeeds, amplitudeFeeds] = await Promise.all([
-                    fetchThingSpeakData(FIELD_MAPPING.VIBRATION_FREQ, 50, date),
-                    fetchThingSpeakData(FIELD_MAPPING.REPULSION_FREQ, 50, date),
-                    fetchThingSpeakData(FIELD_MAPPING.PROBABILITY_ARDUINO, 50, date),
-                    fetchThingSpeakData(FIELD_MAPPING.AMPLITUDE, 50, date)
-                ]);
-                
-                const tableBody = document.querySelector('#activity-log tbody');
-                const showMoreSection = document.getElementById('show-more-section');
-                const logSubtitle = document.getElementById('log-subtitle');
-                
-                // Update subtitle log berdasarkan tanggal yang dipilih
-                const selectedDate = new Date(document.getElementById('date-selector').value);
-                const today = new Date();
-                const isToday = formatDateToInput(selectedDate) === formatDateToInput(today);
-                
-                if (isToday) {
-                    logSubtitle.textContent = '5 data terbaru';
-                } else {
-                    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                    const formattedDate = selectedDate.toLocaleDateString('id-ID', dateOptions);
-                    logSubtitle.textContent = `Data pada ${formattedDate}`;
-                }
-                
-                if (!vibrationFeeds || vibrationFeeds.length === 0) {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">Tidak ada data yang tersedia</td>
-                        </tr>
-                    `;
-                    showMoreSection.style.display = 'none';
-                    return;
-                }
-                
-                // Gabungkan semua data berdasarkan timestamp
-                const combinedData = vibrationFeeds.map(vibrationFeed => {
-                    const timestamp = vibrationFeed.created_at;
-                    
-                    // Cari data yang sesuai di field lainnya berdasarkan timestamp
-                    const repulsionData = repulsionFeeds.find(feed => feed.created_at === timestamp);
-                    const probabilityData = probabilityFeeds.find(feed => feed.created_at === timestamp);
-                    const amplitudeData = amplitudeFeeds.find(feed => feed.created_at === timestamp);
-                    
-                    return {
-                        timestamp: timestamp,
-                        vibration: parseFloat(vibrationFeed.field1) || 0,
-                        repulsion: repulsionData ? (parseFloat(repulsionData.field2) || 0) : 0,
-                        probability: probabilityData ? (parseFloat(probabilityData.field5) || 0) : 0,
-                        amplitude: amplitudeData ? (parseFloat(amplitudeData.field6) || 0) : 0
-                    };
-                });
-                
-                // Simpan semua data ke variabel global
-                allLogData = combinedData.slice().reverse();
-                
-                // Reset tampilan
-                showingMore = false;
-                displayLogData();
-                
-                // Tampilkan tombol "Show More" jika ada lebih dari 5 data
-                if (allLogData.length > INITIAL_LOG_COUNT) {
-                    showMoreSection.style.display = 'block';
-                    updateShowMoreButton();
-                } else {
-                    showMoreSection.style.display = 'none';
-                }
-                
-            } catch (error) {
-                const tableBody = document.querySelector('#activity-log tbody');
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-danger">Error memuat log aktivitas</td>
-                    </tr>
-                `;
-            }
-        }
-        
-        // Fungsi untuk menampilkan data log berdasarkan status "Show More"
-        function displayLogData() {
-            const tableBody = document.querySelector('#activity-log tbody');
-            tableBody.innerHTML = '';
-            
-            const dataToShow = showingMore ? allLogData : allLogData.slice(0, INITIAL_LOG_COUNT);
-            
-            if (dataToShow.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">Tidak ada data yang tersedia</td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            dataToShow.forEach((logData, index) => {
-                const row = document.createElement('tr');
-                const time = new Date(logData.timestamp);
-                
-                // Tambahkan highlight jika data terbaru
-                if (index === 0) {
-                    row.className = 'table-warning';
-                }
-                
-                row.innerHTML = `
-                    <td>
-                        ${formatTime(time)}<br>
-                        <small class="text-muted">${formatDate(time)}</small>
-                    </td>
-                    <td>
-                        <strong>${logData.vibration.toFixed(2)}</strong>
-                        ${logData.vibration > 0 ? '<span class="badge bg-success ms-1">Aktif</span>' : ''}
-                    </td>
-                    <td>
-                        <strong>${logData.repulsion > 0 ? logData.repulsion.toFixed(2) : '-'}</strong>
-                        ${logData.repulsion > 0 ? '<span class="badge bg-danger ms-1">Aktif</span>' : ''}
-                    </td>
-                    <td>
-                        <strong>${logData.probability.toFixed(1)}%</strong>
-                        ${logData.probability > 50 ? '<span class="badge bg-warning ms-1">Tinggi</span>' : ''}
-                    </td>
-                    <td>${logData.amplitude.toFixed(3)}</td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
-        }
-        
-        // Fungsi untuk update tombol "Show More"
-        function updateShowMoreButton() {
-            const showMoreBtn = document.getElementById('show-more-btn');
-            const remainingCount = allLogData.length - INITIAL_LOG_COUNT;
-            
-            if (showingMore) {
-                showMoreBtn.innerHTML = `
-                    <i class="bi bi-chevron-up me-1"></i>
-                    Tampilkan Lebih Sedikit
-                `;
-            } else {
-                showMoreBtn.innerHTML = `
-                    <i class="bi bi-chevron-down me-1"></i>
-                    Tampilkan Selengkapnya (+${remainingCount} data)
-                `;
-            }
-        }
-        
-        // Fungsi untuk handle klik tombol "Show More"
-        function toggleShowMore() {
-            showingMore = !showingMore;
-            displayLogData();
-            updateShowMoreButton();
-        }
-
-        // Fungsi untuk memuat data berdasarkan tanggal yang dipilih
-        async function loadDataForSelectedDate(selectedDate) {
-            const today = new Date();
-            const isToday = formatDateToInput(selectedDate) === formatDateToInput(today);
-            
-            // Update charts
-            loadChartsByDate(selectedDate);
-            
-            // Update data utama
-            await updateData(isToday ? null : selectedDate);
-            
-            // Update statistik khusus untuk tanggal yang dipilih
-            if (!isToday) {
-                await updateHistoricalStatistics(selectedDate);
-            }
-        }
-
-        // Fungsi untuk update statistik historical
-        async function updateHistoricalStatistics(date) {
-            try {
-                // Ambil semua data untuk tanggal yang dipilih
-                const [detectionFeeds, activationFeeds, probabilityFeeds] = await Promise.all([
-                    fetchThingSpeakData(FIELD_MAPPING.DETECTION_COUNT, 1000, date),
-                    fetchThingSpeakData(FIELD_MAPPING.ACTIVATION_COUNT, 1000, date),
-                    fetchThingSpeakData(FIELD_MAPPING.PROBABILITY_ARDUINO, 1000, date)
-                ]);
-                
-                // Hitung statistik
-                const totalDetections = detectionFeeds.length;
-                const totalActivations = activationFeeds.filter(feed => parseFloat(feed.field4) > 0).length;
-                const avgProbability = probabilityFeeds.length > 0 ? 
-                    probabilityFeeds.reduce((sum, feed) => sum + (parseFloat(feed.field5) || 0), 0) / probabilityFeeds.length : 0;
-                
-                document.getElementById('detection-today').textContent = totalDetections;
-                document.getElementById('activation-today').textContent = totalActivations;
-                
-            } catch (error) {
-                console.error('Error updating historical statistics:', error);
-            }
-        }
-
-        // Fungsi untuk auto-refresh iframe
-        function setupChartAutoRefresh() {
-            setInterval(() => {
-                const dateSelector = document.getElementById('date-selector');
-                const selectedDate = new Date(dateSelector.value);
-                const today = new Date();
-                
-                // Hanya refresh jika yang ditampilkan adalah data hari ini
-                if (formatDateToInput(selectedDate) === formatDateToInput(today)) {
-                    loadChartsByDate(selectedDate);
-                }
-            }, UPDATE_INTERVAL);
-        }
-
-        // Inisialisasi saat DOM siap
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set default ke hari ini
-            const today = new Date();
-            document.getElementById('date-selector').value = formatDateToInput(today);
-            document.getElementById('date-selector').max = formatDateToInput(today);
-            
-            // Load chart untuk hari ini
-            loadChartsByDate(today);
-            
-            // Event listener untuk date picker
-            document.getElementById('date-selector').addEventListener('change', function() {
-                const selectedDate = new Date(this.value);
-                loadDataForSelectedDate(selectedDate);
-            });
-            
-            // Event listener untuk tombol "Show More"
-            document.getElementById('show-more-btn').addEventListener('click', function() {
-                toggleShowMore();
-            });
-            
-            // Setup auto-refresh untuk grafik hari ini
-            setupChartAutoRefresh();
-            
-            // Update data pertama kali
-            updateData();
-            
-            // Set interval untuk update data (30 detik sesuai Arduino)
-            setInterval(() => {
-                const dateSelector = document.getElementById('date-selector');
-                const selectedDate = new Date(dateSelector.value);
-                const today = new Date();
-                
-                // Hanya update data real-time untuk hari ini
-                if (formatDateToInput(selectedDate) === formatDateToInput(today)) {
-                    updateData();
-                }
-            }, UPDATE_INTERVAL);
-            
-            // Tambahkan penanganan error untuk iframe ThingSpeak
-            const iframes = document.querySelectorAll('.thingspeak-container iframe');
-            iframes.forEach(iframe => {
-                iframe.addEventListener('error', function() {
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'loading-placeholder';
-                    placeholder.textContent = 'Gagal memuat grafik: ' + this.parentNode.querySelector('.chart-title').textContent;
-                    this.parentNode.replaceChild(placeholder, iframe);
-                });
-            });
-        });
+        // Set interval untuk cek berkala
+        setInterval(cekDelay, 5000); // cek setiap 5 detik
     </script>
 </body>
 </html>
