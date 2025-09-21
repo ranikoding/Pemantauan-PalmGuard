@@ -154,43 +154,6 @@
                         <strong>Mode:</strong> Deteksi & Pengusiran Otomatis
                     </div>
                 </div>
-
-               <div class="card mb-4">
-    <div class="card-header bg-info text-white">
-        <h5 class="card-title mb-0">Status Perangkat</h5>
-    </div>
-    <div class="card-body">
-        <div class="mb-3 p-3 rounded status-inactive" id="accel-status">
-            <div class="d-flex justify-content-between">
-                <strong>Sensor Accelerometer MEMS (Alat Deteksi)</strong>
-                <span class="badge bg-secondary" id="accel-badge">Nonaktif</span>
-            </div>
-            <small class="text-muted">Terakhir diperbarui: <span id="accel-update">-</span></small>
-        </div>
-        <div class="mb-3 p-3 rounded status-inactive" id="mic-status">
-            <div class="d-flex justify-content-between">
-                <strong>Sensor Mikrofon</strong>
-                <span class="badge bg-secondary" id="mic-badge">Nonaktif</span>
-            </div>
-            <small class="text-muted">Sensitivitas: <span id="mic-value">-</span>dB</small>
-        </div>
-        <div class="mb-3 p-3 rounded status-inactive" id="lra-status">
-            <div class="d-flex justify-content-between">
-                <strong>Aktuator LRA (Alat Pengusir)</strong>
-                <span class="badge bg-secondary" id="lra-badge">Nonaktif</span>
-            </div>
-            <small class="text-muted">Frekuensi: <span id="lra-freq">-</span> Hz</small>
-        </div>
-        <div class="p-3 rounded status-inactive" id="iot-status">
-            <div class="d-flex justify-content-between">
-                <strong>Koneksi IoT</strong>
-                <span class="badge bg-secondary" id="iot-badge">Tidak Terhubung</span>
-            </div>
-            <small class="text-muted">Interval Update: 30 detik</small>
-        </div>
-    </div>
-</div>
-
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
                         <h5 class="card-title mb-0">Statistik Percobaan</h5>
@@ -577,95 +540,13 @@
             }
         }
 
-        // Fungsi untuk mengupdate status perangkat
-        function updateDeviceStatus(data) {
-            const now = new Date();
-            const lastUpdate = data ? new Date(data.created_at) : null;
-            
-            // Cek koneksi (jika data ada dan tidak lebih dari 5 menit yang lalu)
-            const isConnected = data && (now - lastUpdate) < (5 * 60 * 1000);
-            
-            if (isConnected) {
-                // Update status koneksi IoT
-                document.getElementById('iot-status').className = 'p-3 rounded status-active';
-                document.getElementById('iot-badge').className = 'badge bg-success';
-                document.getElementById('iot-badge').textContent = 'Terhubung';
-                
-                // Update status perangkat lainnya berdasarkan data aktual
-                const hasVibration = data.field1 && parseFloat(data.field1) > 0;
-                const hasRepulsion = data.field2 && parseFloat(data.field2) > 0;
-                
-                // Accelerometer
-                document.getElementById('accel-status').className = hasVibration ? 
-                    'mb-3 p-3 rounded status-active' : 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('accel-badge').className = hasVibration ? 
-                    'badge bg-success' : 'badge bg-secondary';
-                document.getElementById('accel-badge').textContent = hasVibration ? 'Aktif' : 'Nonaktif';
-                
-                // Mikrofon
-                document.getElementById('mic-status').className = hasVibration ? 
-                    'mb-3 p-3 rounded status-active' : 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('mic-badge').className = hasVibration ? 
-                    'badge bg-success' : 'badge bg-secondary';
-                document.getElementById('mic-badge').textContent = hasVibration ? 'Aktif' : 'Nonaktif';
-                document.getElementById('mic-value').textContent = hasVibration ? '65' : '-';
-                
-                // LRA
-                document.getElementById('lra-status').className = hasRepulsion ? 
-                    'mb-3 p-3 rounded status-active' : 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('lra-badge').className = hasRepulsion ? 
-                    'badge bg-success' : 'badge bg-secondary';
-                document.getElementById('lra-badge').textContent = hasRepulsion ? 'Aktif' : 'Nonaktif';
-                
-                // Mode sistem
-                document.getElementById('system-mode').className = hasRepulsion ? 
-                    'badge bg-primary' : 'badge bg-secondary';
-                document.getElementById('system-mode').textContent = hasRepulsion ? 'Otomatis' : 'Nonaktif';
-                
-                deviceStatus.connected = true;
-                deviceStatus.lastUpdate = lastUpdate;
-                deviceStatus.accelActive = hasVibration;
-                deviceStatus.micActive = hasVibration;
-                deviceStatus.lraActive = hasRepulsion;
-            } else {
-                // Reset semua status ke nonaktif
-                document.getElementById('iot-status').className = 'p-3 rounded status-inactive';
-                document.getElementById('iot-badge').className = 'badge bg-secondary';
-                document.getElementById('iot-badge').textContent = 'Tidak Terhubung';
-                
-                document.getElementById('accel-status').className = 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('accel-badge').className = 'badge bg-secondary';
-                document.getElementById('accel-badge').textContent = 'Nonaktif';
-                
-                document.getElementById('mic-status').className = 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('mic-badge').className = 'badge bg-secondary';
-                document.getElementById('mic-badge').textContent = 'Nonaktif';
-                document.getElementById('mic-value').textContent = '-';
-                
-                document.getElementById('lra-status').className = 'mb-3 p-3 rounded status-inactive';
-                document.getElementById('lra-badge').className = 'badge bg-secondary';
-                document.getElementById('lra-badge').textContent = 'Nonaktif';
-                
-                document.getElementById('system-mode').className = 'badge bg-secondary';
-                document.getElementById('system-mode').textContent = 'Nonaktif';
-                
-                deviceStatus.connected = false;
-                deviceStatus.lastUpdate = null;
-                deviceStatus.accelActive = false;
-                deviceStatus.micActive = false;
-                deviceStatus.lraActive = false;
-            }
-        }
-
         // Fungsi untuk mengupdate data utama
         async function updateData(date = null) {
             try {
                 // Ambil data terakhir dari semua field
                 const lastData = await fetchLastData(date);
                 
-                // Update status perangkat
-                updateDeviceStatus(lastData);
-                
+        
                 // Cek konsistensi data
                 checkDataConsistency(lastData);
                 
