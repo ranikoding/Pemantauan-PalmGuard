@@ -31,18 +31,6 @@
         .card-header {
             border-radius: 10px 10px 0 0 !important;
         }
-        .status-active {
-            background-color: #e8f5e9;
-            border-left: 4px solid #4caf50;
-        }
-        .status-inactive {
-            background-color: #f5f5f5;
-            border-left: 4px solid #9e9e9e;
-        }
-        .auto-mode {
-            background-color: #e3f2fd;
-            border-left: 4px solid #2196f3;
-        }
         .thingspeak-container {
             display: flex;
             flex-wrap: wrap;
@@ -154,6 +142,7 @@
                         <strong>Mode:</strong> Deteksi & Pengusiran Otomatis
                     </div>
                 </div>
+
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
                         <h5 class="card-title mb-0">Statistik Percobaan</h5>
@@ -258,13 +247,6 @@
                                     <small class="text-muted">Frekuensi Pengusiran Terakhir</small>
                                 </div>
             
-                                <div class="p-3 rounded auto-mode mb-3">
-                                    <div class="d-flex justify-content-between">
-                                        <strong>Mode Operasi</strong>
-                                        <span class="badge bg-secondary" id="system-mode">Nonaktif</span>
-                                    </div>
-                                    <small class="text-muted">Sistem belum terhubung</small>
-                                </div>
                                 <div class="alert alert-secondary">
                                     <small id="last-activation">Belum pernah diaktifkan</small>
                                 </div>
@@ -333,15 +315,6 @@
             PROBABILITY_ARDUINO: 5, // Probabilitas dari Arduino (hasil fuzzy logic)
             AMPLITUDE: 6,           // Amplitudo getaran
             RAW_FREQUENCY: 7        // Frekuensi mentah (sebelum FFT)
-        };
-
-        // Status awal perangkat
-        let deviceStatus = {
-            connected: false,
-            lastUpdate: null,
-            accelActive: false,
-            micActive: false,
-            lraActive: false
         };
 
         // Data untuk konsistensi check
@@ -546,7 +519,6 @@
                 // Ambil data terakhir dari semua field
                 const lastData = await fetchLastData(date);
                 
-        
                 // Cek konsistensi data
                 checkDataConsistency(lastData);
                 
@@ -575,8 +547,7 @@
                 
                 // Update frekuensi pengusiran
                 document.getElementById('last-repulsion').textContent = `${repulsionValue} Hz`;
-                document.getElementById('lra-freq').textContent = repulsionValue > 0 ? `${repulsionValue}` : '-';
-             
+                
                 // Update statistik dengan data yang benar
                 document.getElementById('detection-today').textContent = Math.round(detectionCount);
                 document.getElementById('activation-today').textContent = Math.round(activationCount);
@@ -592,9 +563,6 @@
                 document.getElementById('last-activation').textContent = repulsionValue > 0 ? 
                     `Terakhir diaktifkan: ${formatTime(lastUpdate)} (${repulsionValue} Hz, Durasi: 10 detik)` : 
                     'Belum pernah diaktifkan';
-                    
-                document.getElementById('accel-update').textContent = lastUpdate ? 
-                    formatTime(lastUpdate) : '-';
                 
                 // Update log aktivitas dengan data yang lebih lengkap
                 await updateActivityLogWithAllData(date);
