@@ -117,6 +117,7 @@
                     <strong>Interval ThingSpeak:</strong> 20 detik<br>
                     <strong>Durasi LRA:</strong> 10 detik<br>
                     <strong>Channel ID:</strong> 3007423<br>
+                    <strong>Zona Waktu:</strong> WITA (UTC+8)<br>
                 </div>
             </div>
         </div>
@@ -231,8 +232,8 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>#</th>
-                                        <th>Waktu ThingSpeak (UTC)</th>
-                                        <th>Waktu Website (UTC)</th>
+                                        <th>Waktu ThingSpeak (WITA)</th>
+                                        <th>Waktu Website (WITA)</th>
                                         <th>Delay (s)</th>
                                         <th>Status</th>
                                         <th>Probabilitas</th>
@@ -285,9 +286,17 @@
         const connectionQualityElement = document.getElementById('connection-quality');
         const connectionQualityBar = document.getElementById('connection-quality-bar');
 
-        // Fungsi untuk memformat waktu ke UTC
-        function formatWaktuUTC(date) {
-            return date.toISOString().replace('T', ' ').substring(11, 23);
+        // Fungsi untuk mengkonversi UTC ke WITA (UTC+8)
+        function convertUTCtoWITA(utcDate) {
+            const witaDate = new Date(utcDate);
+            witaDate.setHours(witaDate.getHours() + 8); // Tambah 8 jam untuk WITA
+            return witaDate;
+        }
+
+        // Fungsi untuk memformat waktu ke WITA
+        function formatWaktuWITA(date) {
+            const witaDate = convertUTCtoWITA(date);
+            return witaDate.toISOString().replace('T', ' ').substring(11, 23);
         }
 
         // Inisialisasi grafik
@@ -326,13 +335,13 @@
             });
         }
 
-        // Fungsi untuk mengukur delay - VERSI DIPERBAIKI
+        // Fungsi untuk mengukur delay - VERSI WITA
         async function measureDelay() {
             const channelId = document.getElementById('channel-id').value;
             const apiKey = document.getElementById('api-key').value;
             
             try {
-                // Catat waktu sebelum request (UTC)
+                // Catat waktu sebelum request (dalam UTC)
                 const waktuWebsiteSebelum = new Date().getTime();
                 
                 // Lakukan request ke ThingSpeak
@@ -344,22 +353,22 @@
                 
                 const data = await response.json();
                 
-                // Waktu setelah mendapatkan response (UTC)
+                // Waktu setelah mendapatkan response (dalam UTC)
                 const waktuWebsiteSesudah = new Date().getTime();
                 
                 // Waktu dari ThingSpeak (UTC)
-                const waktuThingSpeak = new Date(data.created_at).getTime();
+                const waktuThingSpeakUTC = new Date(data.created_at).getTime();
                 
                 // Hitung delay (rata-rata waktu sebelum dan sesudah request)
                 const waktuWebsiteRataRata = (waktuWebsiteSebelum + waktuWebsiteSesudah) / 2;
-                const delay = (waktuWebsiteRataRata - waktuThingSpeak) / 1000; // dalam detik
+                const delay = (waktuWebsiteRataRata - waktuThingSpeakUTC) / 1000; // dalam detik
                 
-                // Simpan hasil pengujian - SEMUA WAKTI UTC
+                // Simpan hasil pengujian - konversi ke WITA untuk display
                 testCount++;
                 const testResult = {
                     id: testCount,
-                    waktuThingSpeak: new Date(waktuThingSpeak),
-                    waktuWebsite: new Date(waktuWebsiteRataRata),
+                    waktuThingSpeakUTC: new Date(waktuThingSpeakUTC),
+                    waktuWebsiteUTC: new Date(waktuWebsiteRataRata),
                     delay: delay,
                     field5: data.field5 || 'N/A' // Probabilitas hama
                 };
@@ -411,10 +420,10 @@
             }
             
             // Tooltip dengan informasi detail
-            currentDelayIndicator.title = `Delay: ${delay.toFixed(2)} detik\nTerakhir diperbarui: ${new Date().toLocaleTimeString()}`;
+            currentDelayIndicator.title = `Delay: ${delay.toFixed(2)} detik\nTerakhir diperbarui: ${new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar' })} WITA`;
         }
 
-        // Fungsi untuk menambahkan hasil pengujian ke tabel - VERSI DIPERBAIKI
+        // Fungsi untuk menambahkan hasil pengujian ke tabel - VERSI WITA
         function addTestResultToTable(result) {
             // Hapus placeholder jika ada
             if (delayResultsBody.querySelector('td[colspan]')) {
@@ -437,8 +446,8 @@
             
             row.innerHTML = `
                 <td>${result.id}</td>
-                <td class="timestamp">${formatWaktuUTC(result.waktuThingSpeak)}</td>
-                <td class="timestamp">${formatWaktuUTC(result.waktuWebsite)}</td>
+                <td class="timestamp">${formatWaktuWITA(result.waktuThingSpeakUTC)}</td>
+                <td class="timestamp">${formatWaktuWITA(result.waktuWebsiteUTC)}</td>
                 <td><strong>${result.delay.toFixed(2)}</strong></td>
                 <td>${result.delay < 5 ? 'Baik' : result.delay < 10 ? 'Sedang' : 'Buruk'}</td>
                 <td>${result.field5}%</td>
