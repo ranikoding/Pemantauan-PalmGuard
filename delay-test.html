@@ -1,77 +1,561 @@
-// Fungsi untuk mengukur delay - VERSI DIPERBAIKI
-async function measureDelay() {
-    const channelId = document.getElementById('channel-id').value;
-    const apiKey = document.getElementById('api-key').value;
-    
-    try {
-        // Catat waktu website SEBELUM request (WITA)
-        const waktuWebsiteSebelum = new Date();
-        
-        // Lakukan request ke ThingSpeak
-        const response = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${apiKey}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PalmGuard - Pengujian Delay ThingSpeak ↔ Website</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
         }
-        
-        const data = await response.json();
-        
-        // Catat waktu website SETELAH request (WITA)
-        const waktuWebsiteSesudah = new Date();
-        
-        // Waktu dari ThingSpeak (convert ke WITA)
-        const waktuThingSpeakUTC = new Date(data.created_at);
-        const waktuThingSpeakWITA = convertUTCtoWITA(waktuThingSpeakUTC);
-        
-        // Hitung delay yang benar: 
-        // (Waktu website SETELAH request - Waktu website SEBELUM request) / 2
-        // PLUS selisih antara waktu ThingSpeak dan waktu rata-rata website
-        const waktuWebsiteRataRata = new Date((waktuWebsiteSebelum.getTime() + waktuWebsiteSesudah.getTime()) / 2);
-        const delay = (waktuWebsiteRataRata.getTime() - waktuThingSpeakUTC.getTime()) / 1000;
-        
-        // Simpan hasil pengujian
-        testCount++;
-        const testResult = {
-            id: testCount,
-            waktuThingSpeak: waktuThingSpeakWITA,
-            waktuWebsite: waktuWebsiteRataRata,
-            delay: Math.abs(delay), // Gunakan absolute value
-            field5: data.field5 || 'N/A'
-        };
-        
-        testResults.push(testResult);
-        
-        // Update tampilan
-        updateDelayIndicator(delay);
-        addTestResultToTable(testResult);
-        updateStatistics();
-        updateChart();
-        
-        console.log(`Pengujian #${testCount}: Delay = ${delay.toFixed(2)} detik`);
-        
-        return delay;
-    } catch (error) {
-        console.error("Gagal mengukur delay:", error);
-        updateDelayIndicator(null, error.message);
-        return null;
-    }
-}
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .delay-indicator {
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .delay-good {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        .delay-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+        .delay-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+        .test-btn {
+            margin: 5px;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .timestamp {
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .back-btn {
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .system-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .progress {
+            height: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tombol kembali ke halaman utama -->
+        <a href="index.html" class="btn btn-outline-secondary back-btn">
+            <i class="bi bi-arrow-left"></i> Kembali ke Halaman Utama
+        </a>
 
-// Fungsi untuk konversi UTC ke WITA yang lebih akurat
-function convertUTCtoWITA(utcDate) {
-    // Buat date object baru dengan waktu yang sama
-    const witaDate = new Date(utcDate);
-    // Tambahkan 8 jam untuk WITA (UTC+8)
-    witaDate.setHours(witaDate.getHours() + 8);
-    return witaDate;
-}
+        <!-- Header -->
+        <div class="header text-center">
+            <h1><i class="bi bi-speedometer2"></i> PalmGuard</h1>
+            <h2>Pengujian Delay ThingSpeak ↔ Website</h2>
+            <p class="mb-0">Mengukur waktu yang dibutuhkan data dari ThingSpeak sampai ditampilkan di website</p>
+        </div>
 
-// Fungsi untuk memformat waktu WITA
-function formatWaktuWITA(date) {
-    return date.toLocaleTimeString('id-ID', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        timeZone: 'Asia/Makassar'
-    }) + '.' + date.getMilliseconds().toString().padStart(3, '0');
-}
+        <!-- Informasi Sistem -->
+        <div class="system-info">
+            <h5><i class="bi bi-info-circle"></i> Informasi Sistem PalmGuard</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Platform:</strong> ESP32 (Arduino IDE)<br>
+                    <strong>Sensor Utama:</strong> Mikrofon (deteksi suara hama)<br>
+                    <strong>Sensor Sekunder:</strong> MPU6050 Accelerometer (deteksi getaran)<br>
+                    <strong>Aktuator:</strong> Linear Resonant Actuator (LRA)<br>
+                </div>
+                <div class="col-md-6">
+                    <strong>Threshold Aktivasi:</strong> ≥70% probabilitas hama<br>
+                    <strong>Interval ThingSpeak:</strong> 20 detik<br>
+                    <strong>Durasi LRA:</strong> 10 detik<br>
+                    <strong>Channel ID:</strong> 3007423<br>
+                    <strong>Zona Waktu:</strong> WITA (UTC+8)<br>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-gear"></i> Konfigurasi Pengujian</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Channel ID ThingSpeak</label>
+                            <input type="text" class="form-control" id="channel-id" value="3007423">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">API Key (Read)</label>
+                            <input type="text" class="form-control" id="api-key" value="9UL5HWSOQSMGJ2RH">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah Pengujian</label>
+                            <select class="form-select" id="test-count">
+                                <option value="5">5 Kali</option>
+                                <option value="10" selected>10 Kali</option>
+                                <option value="20">20 Kali</option>
+                                <option value="50">50 Kali</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Interval Pengujian (ms)</label>
+                            <input type="number" class="form-control" id="test-interval" value="3000">
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" id="start-test">
+                                <i class="bi bi-play-circle"></i> Mulai Pengujian
+                            </button>
+                            <button class="btn btn-danger" id="stop-test" disabled>
+                                <i class="bi bi-stop-circle"></i> Hentikan Pengujian
+                            </button>
+                            <button class="btn btn-outline-secondary" id="clear-data">
+                                <i class="bi bi-trash"></i> Hapus Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistik -->
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Statistik Delay</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="stat-box">
+                                    <div class="stat-value" id="avg-delay">0.00</div>
+                                    <div class="stat-label">Rata-rata (s)</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-box">
+                                    <div class="stat-value" id="max-delay">0.00</div>
+                                    <div class="stat-label">Maksimum (s)</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-box">
+                                    <div class="stat-value" id="min-delay">0.00</div>
+                                    <div class="stat-label">Minimum (s)</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-box">
+                                    <div class="stat-value" id="test-count-display">0</div>
+                                    <div class="stat-label">Jumlah Tes</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Kualitas Koneksi:</span>
+                                <span id="connection-quality">-</span>
+                            </div>
+                            <div class="progress mt-1">
+                                <div id="connection-quality-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Indikator Delay Saat Ini -->
+                <div class="delay-indicator delay-good" id="current-delay-indicator">
+                    <div class="text-center">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Delay Saat Ini: </span>
+                        <span id="current-delay">-</span>
+                        <span> detik</span>
+                    </div>
+                </div>
+
+                <!-- Tabel Hasil Pengujian -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-table"></i> Hasil Pengujian Delay</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="delay-results">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Waktu ThingSpeak (WITA)</th>
+                                        <th>Waktu Website (WITA)</th>
+                                        <th>Delay (s)</th>
+                                        <th>Status</th>
+                                        <th>Probabilitas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Belum ada data pengujian</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafik Trend Delay -->
+                <div class="card mt-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0"><i class="bi bi-bar-chart"></i> Grafik Trend Delay</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="delay-chart" height="120"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Konfigurasi awal
+        let testInterval;
+        let testCount = 0;
+        let maxTests = 10;
+        let testResults = [];
+        let delayChart;
+
+        // Elemen DOM
+        const startTestBtn = document.getElementById('start-test');
+        const stopTestBtn = document.getElementById('stop-test');
+        const clearDataBtn = document.getElementById('clear-data');
+        const currentDelayElement = document.getElementById('current-delay');
+        const currentDelayIndicator = document.getElementById('current-delay-indicator');
+        const delayResultsBody = document.querySelector('#delay-results tbody');
+        const avgDelayElement = document.getElementById('avg-delay');
+        const maxDelayElement = document.getElementById('max-delay');
+        const minDelayElement = document.getElementById('min-delay');
+        const testCountElement = document.getElementById('test-count-display');
+        const connectionQualityElement = document.getElementById('connection-quality');
+        const connectionQualityBar = document.getElementById('connection-quality-bar');
+
+        // Fungsi untuk konversi UTC ke WITA (UTC+8)
+        function convertUTCtoWITA(utcDate) {
+            const witaDate = new Date(utcDate);
+            witaDate.setHours(witaDate.getHours() + 8); // Tambah 8 jam untuk WITA
+            return witaDate;
+        }
+
+        // Fungsi untuk memformat waktu ke WITA
+        function formatWaktuWITA(date) {
+            return date.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Asia/Makassar'
+            }) + '.' + date.getMilliseconds().toString().padStart(3, '0');
+        }
+
+        // Inisialisasi grafik
+        function initChart() {
+            const ctx = document.getElementById('delay-chart').getContext('2d');
+            delayChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Delay (detik)',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Delay (detik)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Pengujian Ke-'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fungsi untuk mengukur delay - VERSI DIPERBAIKI
+        async function measureDelay() {
+            const channelId = document.getElementById('channel-id').value;
+            const apiKey = document.getElementById('api-key').value;
+            
+            try {
+                // Catat waktu website SEBELUM request (WITA)
+                const waktuWebsiteSebelum = new Date();
+                
+                // Lakukan request ke ThingSpeak
+                const response = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${apiKey}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Catat waktu website SETELAH request (WITA)
+                const waktuWebsiteSesudah = new Date();
+                
+                // Waktu dari ThingSpeak (convert ke WITA)
+                const waktuThingSpeakUTC = new Date(data.created_at);
+                const waktuThingSpeakWITA = convertUTCtoWITA(waktuThingSpeakUTC);
+                
+                // Hitung delay yang benar
+                const waktuWebsiteRataRata = new Date((waktuWebsiteSebelum.getTime() + waktuWebsiteSesudah.getTime()) / 2);
+                const delay = (waktuWebsiteRataRata.getTime() - waktuThingSpeakUTC.getTime()) / 1000;
+                
+                // Simpan hasil pengujian
+                testCount++;
+                const testResult = {
+                    id: testCount,
+                    waktuThingSpeak: waktuThingSpeakWITA,
+                    waktuWebsite: waktuWebsiteRataRata,
+                    delay: Math.abs(delay),
+                    field5: data.field5 || 'N/A'
+                };
+                
+                testResults.push(testResult);
+                
+                // Update tampilan
+                updateDelayIndicator(delay);
+                addTestResultToTable(testResult);
+                updateStatistics();
+                updateChart();
+                
+                console.log(`Pengujian #${testCount}: Delay = ${delay.toFixed(2)} detik`);
+                
+                return delay;
+            } catch (error) {
+                console.error("Gagal mengukur delay:", error);
+                updateDelayIndicator(null, error.message);
+                return null;
+            }
+        }
+
+        // Fungsi untuk mengupdate indikator delay
+        function updateDelayIndicator(delay, errorMessage = null) {
+            if (errorMessage) {
+                currentDelayElement.textContent = "Error";
+                currentDelayIndicator.className = "delay-indicator delay-danger";
+                currentDelayIndicator.title = errorMessage;
+                return;
+            }
+            
+            if (delay === null) {
+                currentDelayElement.textContent = "-";
+                currentDelayIndicator.className = "delay-indicator";
+                return;
+            }
+            
+            currentDelayElement.textContent = delay.toFixed(2);
+            
+            if (delay < 5) {
+                currentDelayIndicator.className = "delay-indicator delay-good";
+            } else if (delay < 10) {
+                currentDelayIndicator.className = "delay-indicator delay-warning";
+            } else {
+                currentDelayIndicator.className = "delay-indicator delay-danger";
+            }
+            
+            currentDelayIndicator.title = `Delay: ${delay.toFixed(2)} detik\nTerakhir diperbarui: ${new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar' })} WITA`;
+        }
+
+        // Fungsi untuk menambahkan hasil pengujian ke tabel
+        function addTestResultToTable(result) {
+            if (delayResultsBody.querySelector('td[colspan]')) {
+                delayResultsBody.innerHTML = '';
+            }
+            
+            const row = document.createElement('tr');
+            
+            let rowClass = '';
+            if (result.delay < 5) {
+                rowClass = 'table-success';
+            } else if (result.delay < 10) {
+                rowClass = 'table-warning';
+            } else {
+                rowClass = 'table-danger';
+            }
+            
+            row.className = rowClass;
+            
+            row.innerHTML = `
+                <td>${result.id}</td>
+                <td class="timestamp">${formatWaktuWITA(result.waktuThingSpeak)}</td>
+                <td class="timestamp">${formatWaktuWITA(result.waktuWebsite)}</td>
+                <td><strong>${result.delay.toFixed(2)}</strong></td>
+                <td>${result.delay < 5 ? 'Baik' : result.delay < 10 ? 'Sedang' : 'Buruk'}</td>
+                <td>${result.field5}%</td>
+            `;
+            
+            delayResultsBody.prepend(row);
+        }
+
+        // Fungsi untuk mengupdate statistik
+        function updateStatistics() {
+            if (testResults.length === 0) return;
+            
+            const delays = testResults.map(result => result.delay);
+            const avgDelay = delays.reduce((sum, delay) => sum + delay, 0) / delays.length;
+            const maxDelay = Math.max(...delays);
+            const minDelay = Math.min(...delays);
+            
+            avgDelayElement.textContent = avgDelay.toFixed(2);
+            maxDelayElement.textContent = maxDelay.toFixed(2);
+            minDelayElement.textContent = minDelay.toFixed(2);
+            testCountElement.textContent = testResults.length;
+            
+            let quality, qualityPercent, qualityClass;
+            if (avgDelay < 3) {
+                quality = "Sangat Baik";
+                qualityPercent = 95;
+                qualityClass = "bg-success";
+            } else if (avgDelay < 6) {
+                quality = "Baik";
+                qualityPercent = 75;
+                qualityClass = "bg-info";
+            } else if (avgDelay < 10) {
+                quality = "Cukup";
+                qualityPercent = 50;
+                qualityClass = "bg-warning";
+            } else {
+                quality = "Buruk";
+                qualityPercent = 25;
+                qualityClass = "bg-danger";
+            }
+            
+            connectionQualityElement.textContent = quality;
+            connectionQualityBar.style.width = `${qualityPercent}%`;
+            connectionQualityBar.className = `progress-bar ${qualityClass}`;
+        }
+
+        // Fungsi untuk mengupdate grafik
+        function updateChart() {
+            if (!delayChart) return;
+            
+            const labels = testResults.map(result => result.id);
+            const data = testResults.map(result => result.delay);
+            
+            delayChart.data.labels = labels;
+            delayChart.data.datasets[0].data = data;
+            delayChart.update();
+        }
+
+        // Fungsi untuk memulai pengujian
+        function startTesting() {
+            const interval = parseInt(document.getElementById('test-interval').value);
+            maxTests = parseInt(document.getElementById('test-count').value);
+            
+            startTestBtn.disabled = true;
+            stopTestBtn.disabled = false;
+            
+            measureDelay();
+            
+            testInterval = setInterval(() => {
+                if (testResults.length >= maxTests) {
+                    stopTesting();
+                    return;
+                }
+                measureDelay();
+            }, interval);
+        }
+
+        // Fungsi untuk menghentikan pengujian
+        function stopTesting() {
+            clearInterval(testInterval);
+            startTestBtn.disabled = false;
+            stopTestBtn.disabled = true;
+        }
+
+        // Fungsi untuk menghapus data
+        function clearData() {
+            testResults = [];
+            testCount = 0;
+            delayResultsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Belum ada data pengujian</td></tr>';
+            updateStatistics();
+            
+            if (delayChart) {
+                delayChart.data.labels = [];
+                delayChart.data.datasets[0].data = [];
+                delayChart.update();
+            }
+            
+            updateDelayIndicator(null);
+        }
+
+        // Event listeners
+        startTestBtn.addEventListener('click', startTesting);
+        stopTestBtn.addEventListener('click', stopTesting);
+        clearDataBtn.addEventListener('click', clearData);
+
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+        });
+    </script>
+</body>
+</html>
