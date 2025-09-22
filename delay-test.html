@@ -339,62 +339,135 @@
             });
         }
 
-        // Fungsi untuk mengukur delay - VERSI DIPERBAIKI
-        async function measureDelay() {
-            const channelId = document.getElementById('channel-id').value;
-            const apiKey = document.getElementById('api-key').value;
-            
-            try {
-                // Catat waktu website SEBELUM request (WITA)
-                const waktuWebsiteSebelum = new Date();
-                
-                // Lakukan request ke ThingSpeak
-                const response = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${apiKey}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Catat waktu website SETELAH request (WITA)
-                const waktuWebsiteSesudah = new Date();
-                
-                // Waktu dari ThingSpeak (convert ke WITA)
-                const waktuThingSpeakUTC = new Date(data.created_at);
-                const waktuThingSpeakWITA = convertUTCtoWITA(waktuThingSpeakUTC);
-                
-                // Hitung delay yang benar
-                const waktuWebsiteRataRata = new Date((waktuWebsiteSebelum.getTime() + waktuWebsiteSesudah.getTime()) / 2);
-                const delay = (waktuWebsiteRataRata.getTime() - waktuThingSpeakUTC.getTime()) / 1000;
-                
-                // Simpan hasil pengujian
-                testCount++;
-                const testResult = {
-                    id: testCount,
-                    waktuThingSpeak: waktuThingSpeakWITA,
-                    waktuWebsite: waktuWebsiteRataRata,
-                    delay: Math.abs(delay),
-                    field5: data.field5 || 'N/A'
-                };
-                
-                testResults.push(testResult);
-                
-                // Update tampilan
-                updateDelayIndicator(delay);
-                addTestResultToTable(testResult);
-                updateStatistics();
-                updateChart();
-                
-                console.log(`Pengujian #${testCount}: Delay = ${delay.toFixed(2)} detik`);
-                
-                return delay;
-            } catch (error) {
-                console.error("Gagal mengukur delay:", error);
-                updateDelayIndicator(null, error.message);
-                return null;
-            }
+        // Fungsi untuk mengukur delay - VERSI DIPERBAIKI LAGI
+async function measureDelay() {
+    const channelId = document.getElementById('channel-id').value;
+    const apiKey = document.getElementById('api-key').value;
+    
+    try {
+        // Catat waktu website SEBELUM request (WITA)
+        const waktuWebsiteSebelum = new Date();
+        
+        // Lakukan request ke ThingSpeak
+        const response = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${apiKey}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const data = await response.json();
+        
+        // Catat waktu website SETELAH request (WITA)
+        const waktuWebsiteSesudah = new Date();
+        
+        // Waktu dari ThingSpeak (UTC)
+        const waktuThingSpeakUTC = new Date(data.created_at);
+        
+        // CEK JIKA DATA TERLALU LAMA (lebih dari 1 jam)
+        const waktuSekarangUTC = new Date();
+        const selisihJam = (waktuSekarangUTC - waktuThingSpeakUTC) / (1000 * 60 * 60); // dalam jam
+        
+        if (selisihJam > 1) {
+            // Data terlalu lama, tampilkan pesan warning
+            console.warn(`Data ThingSpeak terlalu lama: ${selisihJam.toFixed(1)} jam yang lalu`);
+            updateDelayIndicator(null, `Data ThingSpeak terlalu lama (${selisihJam.toFixed(1)} jam)`);
+            return null;
+        }
+        
+        // Convert ke WITA
+        const waktuThingSpeakWITA = convertUTCtoWITA(waktuThingSpeakUTC);
+        const waktuWebsiteRataRata = new Date((waktuWebsiteSebelum.getTime() + waktuWebsiteSesudah.getTime()) / 2);
+        
+        // Hitung delay yang benar
+        const delay = (waktuWebsiteRataRata.getTime() - waktuThingSpeakUTC.getTime()) / 1000;
+        
+        // JIKA DELAY TERLALU BESAR (lebih dari 60 detik), mungkin ada kesalahan
+        if (delay > 60) {
+            console.warn(`Delay tidak normal: ${delay.toFixed(2)} detik`);
+            updateDelayIndicator(null, `Delay tidak normal: ${delay.toFixed(2)} detik`);
+            return null;
+        }
+        
+        // Simpan hasil pengujian
+        testCount++;
+        const testResult = {
+            id: testCount,
+            waktuThingSpeak: waktuThingSpeakWITA,
+            waktuWebsite: convertUTCtoWITA(waktuWebsiteRataRata),
+            delay: Math.abs(delay),
+            field5: data.field5 || 'N/A'
+        };
+        
+        testResults.push(testResult);
+        
+        // Update tampilan
+        updateDelayIndicator(delay);
+        addTestResultToTable(testResult);
+        updateStatistics();
+        updateChart();
+        
+        console.log(`Pengujian #${testCount}: Delay = ${delay.toFixed(2)} detik`);
+        
+        return delay;
+    } catch (error) {
+        console.error("Gagal mengukur delay:", error);
+        updateDelayIndicator(null, error.message);
+        return null;
+    }
+}
+
+// Fungsi untuk konversi UTC ke WITA yang lebih akurat
+function convertUTCtoWITA(utcDate) {
+    const witaDate = new Date(utcDate);
+    witaDate.setHours(witaDate.getHours() + 8); // Tambah 8 jam untuk WITA
+    return witaDate;
+}
+
+// Fungsi untuk memformat waktu WITA
+function formatWaktuWITA(date) {
+    // Pastikan date adalah objek Date yang valid
+    if (!(date instanceof Date) || isNaN(date)) {
+        return '00.00.00.000';
+    }
+    
+    const jam = date.getHours().toString().padStart(2, '0');
+    const menit = date.getMinutes().toString().padStart(2, '0');
+    const detik = date.getSeconds().toString().padStart(2, '0');
+    const milidetik = date.getMilliseconds().toString().padStart(3, '0');
+    
+    return `${jam}.${menit}.${detik}.${milidetik}`;
+}
+
+// Fungsi untuk mengupdate indikator delay - DIPERBAIKI
+function updateDelayIndicator(delay, errorMessage = null) {
+    if (errorMessage) {
+        currentDelayElement.textContent = "Error";
+        currentDelayIndicator.className = "delay-indicator delay-danger";
+        currentDelayIndicator.textContent = errorMessage;
+        return;
+    }
+    
+    if (delay === null || delay === undefined) {
+        currentDelayElement.textContent = "-";
+        currentDelayIndicator.className = "delay-indicator";
+        currentDelayIndicator.textContent = "Menunggu data...";
+        return;
+    }
+    
+    // Update nilai delay
+    currentDelayElement.textContent = delay.toFixed(2);
+    
+    // Update warna berdasarkan nilai delay
+    if (delay < 3) {
+        currentDelayIndicator.className = "delay-indicator delay-good";
+        currentDelayIndicator.textContent = `Delay: ${delay.toFixed(2)} detik (Baik)`;
+    } else if (delay < 10) {
+        currentDelayIndicator.className = "delay-indicator delay-warning";
+        currentDelayIndicator.textContent = `Delay: ${delay.toFixed(2)} detik (Sedang)`;
+    } else {
+        currentDelayIndicator.className = "delay-indicator delay-danger";
+        currentDelayIndicator.textContent = `Delay: ${delay.toFixed(2)} detik (Buruk)`;
+    }
 
         // Fungsi untuk mengupdate indikator delay
         function updateDelayIndicator(delay, errorMessage = null) {
